@@ -486,7 +486,7 @@ class MultidimQuery():
                     remaining_trace = ' '.join(trace_split[parent_end_pos+1:])
                     remaining_trace_split = remaining_trace.split()
                     for i, dom in enumerate(non_empty_domains):
-                        domain_trace_split = [event.split(';')[last_non_empty] for event in remaining_trace_split]
+                        domain_trace_split = [event.split(';')[dom] for event in remaining_trace_split]
 
                         domain_type= last_event_split[dom]
                         domain_trace_list = domain_trace_split
