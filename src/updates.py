@@ -9,14 +9,14 @@ import gzip
 from copy import deepcopy
 
 sys.path.append('.')
-from src.discovery_bu_multidim import _next_queries_multidim, domain_unified_discovery_smarter
+from src.discovery_bu_multidim import _next_queries_multidim, domain_unified_discovery_smarter, ht_descriptive_queries
 from src.sample_multidim import MultidimSample
 
 
 
 def main():
     sample_path = 'datasets/google_query1_status1.txt.gz'
-    trace_length = 7
+    trace_length = 8
     sample_size = 1000
     max_query_length = 4
     counter = 0
@@ -35,32 +35,35 @@ def main():
         counter += 1
     file.close()
     sample2 = MultidimSample(sample_list)
-    sample1 = MultidimSample(sample_list)
+    sample1 = MultidimSample(sample_list[:-2])
     copy_sample1 = deepcopy(sample1)
     copy_sample2 = deepcopy(sample2)
-    supp1 = 0.8
-    supp2 = 0.9
+    supp1 = 1
+    supp2 = 1
     
     result_dictionary = None
-    result_dictionary = domain_unified_discovery_smarter(sample1, supp1, max_query_length=max_query_length)
+    result_dictionary = domain_unified_discovery_smarter(sample1, supp1, max_query_length=max_query_length,
+                                                        find_descriptive_only=True)
     
     starttime = time.time()
     if result_dictionary is not None:
         
         copy_result_dictionary = deepcopy(result_dictionary)
-        new_result_dictionary = update_query_set(copy_result_dictionary, copy_sample1, copy_sample2, supp1, supp2, max_query_length=max_query_length)
+        new_result_dictionary = update_query_set(copy_result_dictionary, copy_sample1, copy_sample2, supp1, supp2,
+                                                 max_query_length=max_query_length, find_descritptive_only=True)
 
         print('Updated Algorithm Time:', time.time()-starttime)
     
     starttime = time.time()
     copy_sample2 = deepcopy(sample2)
-    result_dictionary2 = domain_unified_discovery_smarter(copy_sample2, supp2, max_query_length=max_query_length)
+    result_dictionary2 = domain_unified_discovery_smarter(copy_sample2, supp2, max_query_length=max_query_length, find_descriptive_only=True)
 
     print('Baseline Algorithm Time:', time.time()-starttime)
     
     assert set(new_result_dictionary['matching_dict'].keys()) == set(result_dictionary2['matching_dict'].keys())
 
-def update_query_set(result_dictionary:dict, sample1:MultidimSample, sample2:MultidimSample|None, supp1:float, supp2:float|None, max_query_length:float = -1) -> dict:
+def update_query_set(result_dictionary:dict, sample1:MultidimSample, sample2:MultidimSample|None,
+                     supp1:float, supp2:float|None, max_query_length:float = -1, find_descritptive_only:bool = False) -> dict:
     """
     Update the query set after adding/deleting a stream or changing the global support.
     """
@@ -99,23 +102,28 @@ def update_query_set(result_dictionary:dict, sample1:MultidimSample, sample2:Mul
         if s1 < s2 + sample1_size-sample2_size:
             raise ValueError("This combination of sample sizes and support is not valid for the current algorithm. Please try a different combination.")
     
-        new_result_dictionary = _update_query_set_specification(result_dictionary, sample1, sample2, supp1, supp2, max_query_length)
+        new_result_dictionary = _update_query_set_specification(result_dictionary, sample1, sample2, supp1, supp2, 
+                                                                max_query_length, find_descritptive_only)
     elif sample1_size < sample2_size:
         if s2 < s1 + sample2_size-sample1_size:
             raise ValueError("This combination of sample sizes and support is not valid for the current algorithm. Please try a different combination.")
     
-        new_result_dictionary = _update_query_set_generalisation(result_dictionary, sample1, sample2, supp1, supp2)
+        new_result_dictionary = _update_query_set_generalisation(result_dictionary, sample1, sample2, 
+                                                                 supp1, supp2, find_descritptive_only)
     else:
         if supp1 > supp2:
-            new_result_dictionary = _update_query_set_specification(result_dictionary, sample1, sample2, supp1, supp2,max_query_length)
+            new_result_dictionary = _update_query_set_specification(result_dictionary, sample1, sample2, supp1, supp2,
+                                                                    max_query_length, find_descritptive_only)
         else:
-            new_result_dictionary = _update_query_set_generalisation(result_dictionary, sample1, sample2, supp1, supp2)
+            new_result_dictionary = _update_query_set_generalisation(result_dictionary, sample1, sample2,
+                                                                     supp1, supp2, find_descritptive_only)
     
     return new_result_dictionary
 
 
 
-def _update_query_set_specification(result_dictionary:dict, sample1:MultidimSample, sample2:MultidimSample, supp1:float, supp2:float, max_query_length:float) -> dict:
+def _update_query_set_specification(result_dictionary:dict, sample1:MultidimSample, sample2:MultidimSample, 
+                                    supp1:float, supp2:float, max_query_length:float, find_descriptive_only= False) -> dict:
     """
     Update the query set after deleting a stream and/or decreasing the support value.
     """
@@ -283,9 +291,11 @@ def _update_query_set_specification(result_dictionary:dict, sample1:MultidimSamp
                     parent_dict.update({child._query_string: query for child in children})
             else:
                 non_maching_dict[query._query_string] = query       
-        
-
-    result_dictionary["queryset"] = set(matching_dict.keys()) - {gen_event} - {''}
+    if find_descriptive_only:    
+        queryset, query_tree = ht_descriptive_queries(query_tree, set(matching_dict.keys())) 
+        result_dictionary['queryset'] = queryset - {gen_event}
+    else:
+        result_dictionary['queryset'] = set(matching_dict.keys()) - {gen_event} - {''}
     result_dictionary["non_matching_dict"] = non_maching_dict
     result_dictionary["matching_dict"] = matching_dict
     result_dictionary["dict_iter"] = dict_iter
@@ -294,7 +304,8 @@ def _update_query_set_specification(result_dictionary:dict, sample1:MultidimSamp
 
     return result_dictionary
 
-def _update_query_set_generalisation(result_dictionary:dict, sample1:MultidimSample, sample2:MultidimSample, supp1:float, supp2:float) -> dict:
+def _update_query_set_generalisation(result_dictionary:dict, sample1:MultidimSample, sample2:MultidimSample, 
+                                     supp1:float, supp2:float, find_descriptive_only:bool = False) -> dict:
     """
     Update the query set after adding a stream and/or increasing the support value.
     """
@@ -357,6 +368,11 @@ def _update_query_set_generalisation(result_dictionary:dict, sample1:MultidimSam
         else:
             non_matching_set.add(querystring)
 
+    if find_descriptive_only:
+        queryset, query_tree = ht_descriptive_queries(query_tree, set(matching_dict.keys())) 
+        result_dictionary['queryset'] = queryset - {gen_event}
+    else:
+        result_dictionary['queryset'] = set(matching_dict.keys()) - {gen_event} - {''}
     result_dictionary['matching_dict'] = query_dict
     result_dictionary['parent_dict'] = parent_dict
     return result_dictionary

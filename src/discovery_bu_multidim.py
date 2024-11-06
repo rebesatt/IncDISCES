@@ -25,7 +25,7 @@ FORMATTER = logging.Formatter(LOG_FORMAT)
 FILE_HANDLER.setFormatter(FORMATTER)
 LOGGER.addHandler(FILE_HANDLER)
 
-def domain_unified_discovery_smarter(sample, supp, max_query_length) -> dict:
+def domain_unified_discovery_smarter(sample, supp, max_query_length, find_descriptive_only=False) -> dict:
     """Query Discovery by using unified bottom up depth-first search with smarter matching.
 
     Args:
@@ -127,7 +127,11 @@ def domain_unified_discovery_smarter(sample, supp, max_query_length) -> dict:
 
     
     result_dict = {}
-    result_dict['queryset'] = set(matching_dict.keys()) - {gen_event} - {''}
+    if find_descriptive_only:
+        queryset, query_tree = ht_descriptive_queries(query_tree, set(matching_dict.keys())) 
+        result_dict['queryset'] = queryset - {gen_event}
+    else:
+        result_dict['queryset'] = set(matching_dict.keys()) - {gen_event} - {''}
     result_dict['querycount'] =  querycount
     result_dict['parent_dict'] = parent_dict
     result_dict['matching_dict'] = matching_dict
@@ -458,3 +462,179 @@ def _next_queries_multidim(query, alphabet, max_query_length, patternset, only_t
 
 
     return children
+
+def ht_descriptive_queries(query_tree:HyperLinkedTree, matching_queries:set):
+    ht_non_descriptive = set()
+    for vertex in query_tree.vertices_to_list(frequent_items_only=False):
+        querystring = vertex.query_string
+        if querystring not in matching_queries:
+            continue
+        if vertex.parent_vertices:
+            parent_vertices = vertex.parent_vertices
+        else:
+            parent_vertices = query_tree.find_parent_vertices(vertex)
+            vertex.parent_vertices = parent_vertices
+        parent_querystrings = [parent_vertex.query_string for parent_vertex in parent_vertices if parent_vertex]
+
+        ht_non_descriptive.update(parent_querystrings)
+    pos_descriptive = matching_queries - ht_non_descriptive
+    splitted_event_qs_set = [[event.split(";") for event in qs.split()] for qs in pos_descriptive]
+    # descriptive_query_set = set()
+    non_descriptive_query_set = set()
+    qs_set_pairs = list(combinations(splitted_event_qs_set, 2))
+    for cur_tuple in qs_set_pairs:
+        curr_qs = cur_tuple[0]
+        splitted_query_string = cur_tuple[1]
+
+        curr_qs_is_descriptive = True
+        splitted_event_is_descriptive = True
+        if len(curr_qs) < len(splitted_query_string):
+            if _syntactically_contained(curr_qs, splitted_query_string):
+                curr_qs_is_descriptive = False
+                childstring = ' '.join([';'.join(event) for event in splitted_query_string])
+                new_child = query_tree.find_vertex(childstring)
+                if new_child:
+                    non_desc_string = ' '.join([';'.join(event) for event in curr_qs])
+                    non_desc_vertex = query_tree.find_vertex(non_desc_string)
+                    new_child.parent_vertices.add(non_desc_vertex)
+
+        elif len(splitted_query_string) < len(curr_qs):
+            if _syntactically_contained(splitted_query_string, curr_qs):
+                splitted_event_is_descriptive = False
+                childstring = ' '.join([';'.join(event) for event in curr_qs])
+                non_desc_string = ' '.join([';'.join(event) for event in splitted_query_string])
+                new_child = query_tree.find_vertex(childstring)
+                non_desc_vertex = query_tree.find_vertex(non_desc_string)
+                new_child.parent_vertices.add(non_desc_vertex)
+                
+        else:
+            if _syntactically_contained(curr_qs, splitted_query_string):
+                curr_qs_is_descriptive = False
+                childstring = ' '.join([';'.join(event) for event in splitted_query_string])
+                new_child = query_tree.find_vertex(childstring)
+                if new_child:
+                    non_desc_string = ' '.join([';'.join(event) for event in curr_qs])
+                    non_desc_vertex = query_tree.find_vertex(non_desc_string)
+                    new_child.parent_vertices.add(non_desc_vertex)
+                
+            if _syntactically_contained(splitted_query_string, curr_qs):
+                splitted_event_is_descriptive = False
+                childstring = ' '.join([';'.join(event) for event in curr_qs])
+                non_desc_string = ' '.join([';'.join(event) for event in splitted_query_string])
+                new_child = query_tree.find_vertex(childstring)
+                non_desc_vertex = query_tree.find_vertex(non_desc_string)
+                new_child.parent_vertices.add(non_desc_vertex)
+                
+        if not curr_qs_is_descriptive:
+            non_descriptive_query_set.add(non_desc_string)
+        elif not splitted_event_is_descriptive:
+            non_descriptive_query_set.add(non_desc_string)
+        
+    return pos_descriptive - non_descriptive_query_set, query_tree
+
+def _syntactically_contained(qs_array_1:list, qs_array_2:list, assignments:dict|None=None) -> bool:
+    """
+        Decides whether on of the arrays of arrays of events is contained in the other following a given varibale mapping.
+        The relation is symmetric.
+        Example:
+            _syntactically_contained([['a','b']], [['a','']]) === True
+            _syntacitcally_contained([['$x0',''],['$x0','']], [['a',''], ['a','']]) === True
+            _syntacitcally_contained([['$x0',''],['$x0','']], [['a',''], ['a','']], {'$x0' : 'a'}) === True
+            _syntacitcally_contained([['$x0',''],['$x0','']], [['a',''], ['a','']], {'$x0' : 'b'}) === False
+
+        Args:
+            qs_array_1: an array of array containg attributes
+                e.g. [event.split(';') for event in query_string.split()]
+
+            qs_array_2: an array of array containg attributes
+
+            assignments [=None]: optional parameter to give an already defined dictionary as varibale mapping.
+
+        Returns:
+            bool:
+                True, if one qs_array contains the other
+                False, else.
+
+        Raises:
+            TypeError: if a given assignment dictionary is not of type <dict>.
+            TypeError if a given assignment dictionary is not of type <dict>.
+
+        Passes:
+            ValueError from _syntactically_contained_event(...)
+    """
+    if len(qs_array_1) == 0:
+        return True
+    if len(qs_array_2) == 0:
+        return False
+    if assignments is None:
+        assignments = {}
+        assignments_cp = {}
+    else:
+        if not isinstance(assignments, dict):
+            raise TypeError("A given assignment dictionary must be of type <dict>!")
+        assignments_cp = deepcopy(assignments)
+    event_counter = 0
+    for i, ev_array_2 in enumerate(qs_array_2):
+        ev_array_1 = qs_array_1[event_counter]
+        equals, changed = _syntactically_contained_event(ev_array_1, ev_array_2, assignments_cp)
+        if not equals:
+            continue
+        if not changed:
+            event_counter += 1
+        else:
+            if _syntactically_contained(qs_array_1[event_counter+1:],qs_array_2[i+1:],assignments_cp):
+                return True
+            assignments_cp = deepcopy(assignments)
+        if event_counter == len(qs_array_1):
+            return True
+    return False
+
+def _syntactically_contained_event(ev_array_1:list, ev_array_2:list, assignments:dict|None=None) -> tuple:
+    """
+        Decides whether ev_array_1 is contained in ev_array_2 or not.
+        The relation checks only one way.
+        Example:
+            _syntactically_contained(['a','b'], ['a','']) === False
+            _syntactically_contained(['a',''], ['a','b']) === True
+
+        Args:
+            ev_array_1: an array with attributes or variables (i.e. representing an event)
+
+            ev_array_2: an array with attributes or variables (i.e. representing an event)
+
+            assignments [=None]: optional parameter to give an already defined dictionary as varibale mapping.
+
+        Returns:
+            tuple: (value_1, value_2)
+                value_1 = True, if ev_array_2 contains ev_array_1
+                value_1 = False, else
+                value_2 = True, if the assignment has be changed
+                value_2 = False, else
+
+        Raises:
+            ValueError: if the dimension of both ev_arrays does not match
+
+        Passes:
+            None
+    """
+    if not len(ev_array_1) == len(ev_array_2):
+        raise ValueError("Dimension of events does not match!")
+    changed_assignments = False
+    for dim, value in enumerate(ev_array_1):
+        if value == "":
+            continue
+        if ev_array_2[dim] == "":
+            return False, changed_assignments
+        if not value[0] == "$":
+            if value == ev_array_2[dim]:
+                continue
+            return False, changed_assignments
+        else:
+            if value in assignments:
+                if assignments[value] == ev_array_2[dim]:
+                    continue
+                return False, changed_assignments
+            else:
+                assignments[value] = ev_array_2[dim]
+                changed_assignments = True
+    return True, changed_assignments
