@@ -112,12 +112,15 @@ def main():
                 for i in range (1,11):
                     samples2_list.append(sample_list[:-i])
                 
-                samples1 = [samples2_list[-1], samples2_list[0], samples2_list[0], samples2_list[0]]
-                samples2 = [samples2_list[:-1], samples2_list[1:], [samples2_list[0]], [samples2_list[0]]]
-                supports1 = [supp1, supp1, 0.75, 1]
-                supports2 = [[supp2], [supp2], [0.8, 0.85, 0.9, 0.95, 1], [0.75, 0.8, 0.85, 0.9, 0.95]]
-                up_mode_list = ['gen', 'spec', 'gen', 'spec']
-                supp_sample = ['sample', 'sample', 'supp', 'supp']
+                samples1 = [samples2_list[-1], samples2_list[0], samples2_list[0], samples2_list[0], 
+                            samples2_list[5], samples2_list[0]]
+                samples2 = [samples2_list[:-1], samples2_list[1:], [samples2_list[0]], [samples2_list[0]],
+                            samples2_list[0:5], samples2_list[1:6]]
+                supports1 = [supp1, supp1, 0.75, 1, 0.75, 1]
+                supports2 = [[supp2], [supp2], [0.8, 0.85, 0.9, 0.95, 1], [0.75, 0.8, 0.85, 0.9, 0.95],
+                                                [0.8, 0.85, 0.9, 0.95, 1], [0.75, 0.8, 0.85, 0.9, 0.95]]
+                up_mode_list = ['gen', 'spec', 'gen', 'spec', 'gen', 'spec']
+                supp_sample = ['sample', 'sample', 'supp', 'supp', 'sampsupp', 'sampsupp']
 
                 for samp1, samp2, sp1, sp2, up_mode, spsamp in zip(samples1, samples2, supports1, 
                                                                 supports2, up_mode_list, supp_sample):
@@ -133,15 +136,29 @@ def main():
                                     columns=columns)
                     else:
                         for _ in range(repetition):
-                            results, columns = match_algos(samp1, samp2, 
+                            if spsamp == 'sampsupp':
+                                for sample2, support2 in zip(samp2, sp2[::-1]):
+                                    results, columns = match_algos(samp1, [sample2], 
+                                                        sp1, [support2], results, up_mode, mod,
+                                                        j, file_path, max_query_length=max_query_length)
+
+                            else:
+                                results, columns = match_algos(samp1, samp2, 
                                                         sp1, sp2, results, up_mode, mod,
                                                         j, file_path, max_query_length=max_query_length)
                         dataframe = pd.DataFrame(results, columns=columns)
                         if len(samp2) !=1:
+                            if len(sp2) == 1:
 
-                            current_df = dataframe.loc[(dataframe['mode'] == abstraction) &
+                                current_df = dataframe.loc[(dataframe['mode'] == abstraction) &
                                                     (dataframe['iteration'] == up_mode) &
                                                     (dataframe['support 1']== dataframe['support 2'] )]
+                            else:
+                                current_df = dataframe.loc[(dataframe['mode'] == abstraction) &
+                                                    (dataframe['iteration'] == up_mode) &
+                                                    (dataframe['support 1'] != dataframe['support 2'] ) &
+                                                    (dataframe['sample size 1'] != dataframe['sample size 2'] )]
+
                         else:
                             current_df = dataframe.loc[(dataframe['mode'] == abstraction) &
                                                     (dataframe['iteration'] == up_mode) &
@@ -314,6 +331,7 @@ def create_plots(dataframe:pd.DataFrame):
     results = []
     all_results = []
     sns.set_context('poster', font_scale=1.2) # rc={"lines.linewidth": 2.5})
+    sns.set_palette('colorblind')
     for mode in df_gen_sample['mode'].unique():
         orig_sample_size = df_gen_sample.loc[(df_gen_sample['mode']==mode)]['sample size 1'].min()
         for samp2_size in df_gen_sample['sample size 2'].unique():
@@ -342,7 +360,7 @@ def create_plots(dataframe:pd.DataFrame):
     grid = sns.relplot(data=df_plot, x='Added streams', y='Rel timechange', hue='Abstraction',
                        col='Dataset', kind='line', style='Abstraction', markers=True, legend=False)
     grid.set(yscale='log', yticks= [1,10,100], xticks=[5,10])
-    grid.savefig('experiments/BTW2025/plots/gen_sample.pdf')
+    grid.savefig('experiments/plots/gen_sample.pdf')
 
     results = []
     for mode in df_gen_supp['mode'].unique():
@@ -373,7 +391,7 @@ def create_plots(dataframe:pd.DataFrame):
     grid = sns.relplot(data=df_plot, x='New support', y='Rel timechange', hue='Abstraction',
                        col='Dataset', kind='line', style='Abstraction', markers=True)
     grid.set(yscale='log', yticks= [1,10,100], xticks=[0.8, 0.9, 1.0])
-    grid.savefig('experiments/BTW2025/plots/gen_supp.pdf')
+    grid.savefig('experiments/plots/gen_supp.pdf')
 
     results = []
     for mode in df_spec_sample['mode'].unique():
@@ -404,7 +422,7 @@ def create_plots(dataframe:pd.DataFrame):
     grid = sns.relplot(data=df_plot, x='# Deleted streams', y='Rel timechange', hue='Abstraction',
                        col='Dataset', kind='line', style='Abstraction', markers=True, legend=False)
     grid.set(yscale='log', yticks= [1,10,100], xticks=[5,10])
-    grid.savefig('experiments/BTW2025/plots/spec_sample.pdf')
+    grid.savefig('experiments/plots/spec_sample.pdf')
 
     results = []
     for mode in df_spec_supp['mode'].unique():
@@ -434,15 +452,15 @@ def create_plots(dataframe:pd.DataFrame):
     grid = sns.relplot(data=df_plot, x='New support', y='Rel timechange', hue='Abstraction',
                        col='Dataset', kind='line', style='Abstraction', markers=True)
     grid.set(yscale='log', yticks= [1,10], xticks=[0.75, 0.85, .95])
-    grid.savefig('experiments/BTW2025/plots/spec_supp.pdf')
+    grid.savefig('experiments/plots/spec_supp.pdf')
 
     columns = ['Change of Queryset size', 'Abstraction', 'Rel timechange', 'Dataset' ]
     df_plot = pd.DataFrame(all_results, columns=columns)
     grid = sns.relplot(data= df_plot, x= 'Change of Queryset size', y='Rel timechange', hue='Abstraction' )
     grid.set(yscale='log', yticks= [1,10,100])
-    grid.savefig('experiments/BTW2025/plots/queryset_change1.pdf')
+    grid.savefig('experiments/plots/queryset_change1.pdf')
     dataframe['Change of Queryset size'] = dataframe['queryset size'] - dataframe['searchspace']
     grid = sns.relplot(data= dataframe, x= 'Change of Queryset size', y='time', hue='algorithm' )
-    grid.savefig('experiments/BTW2025/plots/queryset_change.pdf')
+    grid.savefig('experiments/plots/queryset_change.pdf')
 if __name__ == "__main__":
     main()

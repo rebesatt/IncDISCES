@@ -9,7 +9,7 @@ import gzip
 from copy import deepcopy
 
 sys.path.append('.')
-from src.discovery_bu_multidim import _next_queries_multidim, domain_unified_discovery_smarter
+from src.discovery_bu_multidim import _next_queries_multidim, domain_unified_discovery_smarter, calc_patternset
 from src.sample_multidim import MultidimSample
 
 
@@ -187,6 +187,7 @@ def _update_query_set_specification(result_dictionary:dict, sample1:MultidimSamp
     while stack:
         query = stack.pop()
         querystring = query._query_string
+        # query.set_query_matchtest('smarter')
         if parent_dict[querystring]._query_string == gen_event:
                 parentstring = ''
         else:
@@ -231,6 +232,8 @@ def _update_query_set_specification(result_dictionary:dict, sample1:MultidimSamp
                     continue
                 else:
                     seen.add(querystring)
+                # vertex = query_tree.find_vertex(querystring)
+                # query.set_query_matchtest('smarter')
                 if parent_dict[querystring]._query_string == gen_event:
                     parentstring = ''
                 else:
@@ -262,6 +265,7 @@ def _update_query_set_specification(result_dictionary:dict, sample1:MultidimSamp
         while stack2:
             query = stack2.pop()
             querystring = query._query_string
+            # query.set_query_matchtest('smarter')
             if parent_dict[querystring]._query_string == gen_event:
                 parentstring = ''
             else:
@@ -308,20 +312,22 @@ def _update_query_set_generalisation(result_dictionary:dict, sample1:MultidimSam
     s2 = ceil(sample2_size * supp2)
     domain_cnt = sample1._sample_event_dimension
     gen_event= ';' * domain_cnt
-
+    gen_event_list = [i for i in gen_event]
+    vsdb2 = {}
+    patternset2={}
     patternset = result_dictionary['patternset']
     att_vsdb2 = sample2.get_att_vertical_sequence_database()
-    new_trace_ids = [sample2._sample.index(trace) for trace in stream_difference]
-
-    for domain, dom_vsdb in att_vsdb2.items():
-        patternset[domain].update({trace_id: set() for trace_id in new_trace_ids})
-        for key, value in dom_vsdb.items():
-
-            for item in new_trace_ids:
-                if item in value:
-                    if len(value[item]) >= 2:
-
-                        patternset[domain][item].add(key)
+    patternset2, all_patternset2 = calc_patternset(gen_event_list, att_vsdb2, sample2_size, vsdb2)
+    # for domain, dom_vsdb in att_vsdb2.items():
+    #     for key, value in dom_vsdb.items():
+    #         new_key = ''.join(gen_event_list[:domain] + [key] + gen_event_list[domain:])
+    #         vsdb2[new_key] = value
+    #         for item in value.keys():
+    #             if len(value[item]) >= 2:
+    #                 if domain not in patternset2.keys():
+    #                     patternset2[domain] = set()
+    #                 patternset2[domain].add(key)
+    #                 break
         
 
     dict_iter = result_dictionary['dict_iter']
@@ -347,7 +353,7 @@ def _update_query_set_generalisation(result_dictionary:dict, sample1:MultidimSam
         query = matching_dict[querystring]
         vertex = query_tree.find_vertex(querystring)
         matching = query.match_sample(sample=sample2, supp=supp2, 
-                                    dict_iter=dict_iter, patternset= patternset, parent_dict=parent_dict)  
+                                    dict_iter=dict_iter, patternset= patternset2, parent_dict=parent_dict)  
         if matching:
             query_dict[querystring] = query
             children_querystrings = [child_vertex.query_string for child_vertex in vertex.child_vertices]

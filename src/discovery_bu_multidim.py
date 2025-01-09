@@ -401,7 +401,12 @@ def _next_queries_multidim(query, alphabet, max_query_length, patternset, only_t
         first_pos = max(pos_last_type, pos_first_var)
         first_pos_event= querystring_list[first_pos]
         if 'last_variable_domain' in locals():
-            last_symbol_domain = last_variable_domain
+            if pos_first_var != pos_last_type:
+                last_symbol_domain = last_variable_domain
+            else:
+                for domain, letter in enumerate(first_pos_event.split(';')):
+                    if letter:
+                        last_symbol_domain = domain
         else:
             for domain, letter in enumerate(first_pos_event.split(';')):
                 if letter and '$' not in letter:
@@ -458,3 +463,19 @@ def _next_queries_multidim(query, alphabet, max_query_length, patternset, only_t
 
 
     return children
+
+def calc_patternset(gen_event_list, att_vsdb, sample_size, vsdb):
+    patternset ={}
+    all_patternset = {}
+    for domain, dom_vsdb in att_vsdb.items():
+        patternset[domain] = set()
+        all_patternset[domain] = {trace_id: set() for trace_id in range(sample_size)}
+        for key, value in dom_vsdb.items():
+            new_key = ''.join(gen_event_list[:domain] + [key] + gen_event_list[domain:])
+            vsdb[new_key] = value
+            # if not only_types:
+            for item in value.keys():
+                if len(value[item]) >= 2:
+                    all_patternset[domain][item].add(key)
+                    patternset[domain].add(key)
+    return all_patternset,patternset

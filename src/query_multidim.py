@@ -193,6 +193,9 @@ class MultidimQuery():
             self._query_matched_traces = matched_traces
         
         dict_iter[querystring] = matching
+        for trace in sample._sample:
+            if not trace:
+                sample_size-=1
         matchsupport= matchingcount/sample_size
         if matchsupport< supp:
             return False
@@ -234,7 +237,12 @@ class MultidimQuery():
         sample_size = sample._sample_size
         
         if not self._query_matched_traces:
-            traces_to_match = list(range(sample_size))
+            traces_to_match = []
+            for trace_id, trace in enumerate(sample._sample):
+                if trace:
+                    traces_to_match.append(trace_id)
+            # traces_to_match = list(range(sample_size))
+            sample_size = len(traces_to_match)
             matched_traces = []
         else:
             matched_traces = self._query_matched_traces
@@ -248,13 +256,12 @@ class MultidimQuery():
             for trace_idx in traces_to_match:
                 if num_trace_match/sample_size < supp:
                     break
-                if not sample._sample[trace_idx]:
-                    idx = -1
-                else:
-                    idx = self._smart_trace_match_multidim(querystring ,trace_split_list[trace_idx], trace_idx, dict_iter, query_list)
-                if trace_idx not in trace_matches:
-                    trace_matches[trace_idx]= {}
-                trace_matches[trace_idx]= idx
+                # if not sample._sample[trace_idx]:
+                #     num_trace_match-=1
+                #     sample_size-=1
+                #     continue
+                idx = self.update_trace_matches_dict(dict_iter, trace_split_list, trace_matches, trace_idx, querystring, None)
+
                 if idx == -1:
                     num_trace_match -=1
 
@@ -295,32 +302,15 @@ class MultidimQuery():
             for trace in trace_list:
                 if num_trace_match/sample_size < supp:
                     break
-                if not sample._sample[trace]:
-                    num_trace_match-=1
-                    continue
-
-                for letter in patternset[var_domain][trace]:
-                    letter_querystring = querystring.replace('$x0', letter)
-                    if letter_querystring in dict_iter:
-                        if trace in dict_iter[letter_querystring]:
-                            if sample._sample[trace]:
-                                if dict_iter[letter_querystring][trace] !=-1:
-                                    if trace not in trace_matches:
-                                        trace_matches[trace]= {}
-                                    trace_matches[trace][(letter,)]= dict_iter[letter_querystring][trace]
-                        else:
-                            idx= self._smart_trace_match_multidim(letter_querystring, trace_split_list[trace], trace, dict_iter)
-                            if idx != -1:
-                                if trace not in trace_matches:
-                                    trace_matches[trace]= {}
-                                trace_matches[trace][(letter,)]= idx
-                    else:
-                        idx= self._smart_trace_match_multidim(letter_querystring, trace_split_list[trace], trace, dict_iter)
-                        if idx != -1:
-                            if trace not in trace_matches:
-                                trace_matches[trace]= {}
-                            trace_matches[trace][(letter,)]= idx
-
+                # if not sample._sample[trace]:
+                #     num_trace_match-=1
+                #     sample_size-=1
+                #     continue
+                if var_domain in patternset:
+                    for letter in patternset[var_domain][trace]:
+                        letter_querystring = querystring.replace('$x0', letter)
+                        self.find_trace_matches(sample, dict_iter, trace_split_list, trace_matches, trace, letter_querystring, (letter,))
+                        
                 if trace not in trace_matches:
                     num_trace_match-=1
             return trace_matches
@@ -346,70 +336,57 @@ class MultidimQuery():
                 dict_iter[parentstring] = parent_match
                 parent_traces= list(parent_match.keys())
             
-            trace_list= [trace for trace in traces_to_match if trace in parent_traces]
-
             trace_list = set(traces_to_match) & set(parent_traces)
             num_trace_match = len(trace_list) + len(matched_traces)
             for trace in trace_list:
                 if num_trace_match/sample_size < supp:
                     break
-                if not sample._sample[trace]:
-                    num_trace_match-=1
-                    continue
+                # if not sample._sample[trace]:
+                #     num_trace_match-=1
+                #     sample_size-=1
+                #     continue
                 group_list= list(dict_iter[parentstring][trace].keys())
                 for group in group_list:
                     letter_querystring=querystring
                     assert len(group) == len(parent_variables)
                     for val, letter in enumerate(group):
                         letter_querystring = letter_querystring.replace(f'${parent_variables[val]}', letter)
-                    if letter_querystring.count('$')>0:
+                    if letter_querystring.count('$')>0 and var_domain in patternset:
 
                         for letter in patternset[var_domain][trace]:
                             letter_querystring2 = letter_querystring.replace(f'$x{len(group)}', letter)
-                            if letter_querystring2 in dict_iter:
-                                if trace in dict_iter[letter_querystring2]:
-                                    if dict_iter[letter_querystring2][trace] !=-1:
-                                        if trace not in trace_matches:
-                                            trace_matches[trace]= {}
-                                        trace_matches[trace][group + (letter,)]= dict_iter[letter_querystring2][trace]
-
-                                else:
-                                    idx = self._smart_trace_match_multidim(letter_querystring2, trace_split_list[trace], trace, dict_iter)
-                                    if idx != -1:
-                                        if trace not in trace_matches:
-                                            trace_matches[trace]= {}
-                                        trace_matches[trace][group + (letter,)]= idx
-
-                            else:
-                                idx = self._smart_trace_match_multidim(letter_querystring2, trace_split_list[trace], trace, dict_iter)
-                                if idx != -1:
-                                    if trace not in trace_matches:
-                                        trace_matches[trace]= {}
-                                    trace_matches[trace][group + (letter,)]= idx
-
+                            self.find_trace_matches(sample, dict_iter, trace_split_list, trace_matches, trace, letter_querystring2, group+(letter,))
                     else:
-                        if letter_querystring in dict_iter:
-                            if trace in dict_iter[letter_querystring]:
-                                if dict_iter[letter_querystring][trace] !=-1 and sample._sample[trace]:
-                                    if trace not in trace_matches:
-                                        trace_matches[trace]= {}
-                                    trace_matches[trace][group]= dict_iter[letter_querystring][trace]
-                            else:
-                                idx= self._smart_trace_match_multidim(letter_querystring, trace_split_list[trace], trace, dict_iter)
-                                if idx != -1:
-                                    if trace not in trace_matches:
-                                        trace_matches[trace]= {}
-                                    trace_matches[trace][group]= idx
-                        else:
-                            idx = self._smart_trace_match_multidim(letter_querystring, trace_split_list[trace], trace, dict_iter)
-                            if idx != -1:
-                                if trace not in trace_matches:
-                                    trace_matches[trace]= {}
-                                trace_matches[trace][group]= idx
+                        self.find_trace_matches(sample, dict_iter, trace_split_list, trace_matches, trace, letter_querystring, group)
 
                 if trace not in trace_matches:
                     num_trace_match-=1
             return trace_matches
+
+    def find_trace_matches(self, sample, dict_iter, trace_split_list, trace_matches, trace, letter_querystring, group):
+        if letter_querystring in dict_iter:
+            if trace in dict_iter[letter_querystring]:
+                if dict_iter[letter_querystring][trace] !=-1 and sample._sample[trace]:
+                    if trace not in trace_matches:
+                        trace_matches[trace]= {}
+                    trace_matches[trace][group]= dict_iter[letter_querystring][trace]
+            else:
+                self.update_trace_matches_dict(dict_iter, trace_split_list, trace_matches, trace, letter_querystring, group)
+                                
+        else:
+            self.update_trace_matches_dict(dict_iter, trace_split_list, trace_matches, trace, letter_querystring, group)
+
+    def update_trace_matches_dict(self, dict_iter, trace_split_list, trace_matches, trace, letter_querystring, group):
+        idx = self._smart_trace_match_multidim(letter_querystring, trace_split_list[trace], trace, dict_iter)
+        if idx != -1:
+            if trace not in trace_matches:
+                trace_matches[trace]= {}
+            if group:
+                trace_matches[trace][group] = idx
+            else:
+                trace_matches[trace] = idx
+        return idx
+
 
     def _smart_trace_match_multidim(self, querystring, trace_split, trace_idx, dict_iter, query_split=None):
         """Given a trace and a querystring the matching position is calculated and in case of a match
