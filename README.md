@@ -21,7 +21,7 @@ the problem context, before presenting algorithmic solutions to cope with
 changes in the stream database or the adopted support threshold.
 
 Our experiments using real-world data demonstrate that our incremental query
-discovery reduces the runtimes by up to 1000 times compared to a baseline solution.
+discovery reduces the runtimes by up to 3 orders of magnitude compared to a baseline solution.
 
 The algorithms can be run with:
 ```

@@ -260,10 +260,11 @@ class MultidimQuery():
                 #     num_trace_match-=1
                 #     sample_size-=1
                 #     continue
-                idx = self.update_trace_matches_dict(dict_iter, trace_split_list, trace_matches, trace_idx, querystring, None)
+                if trace_split_list[trace_idx]:
+                    idx = self.update_trace_matches_dict(dict_iter, trace_split_list, trace_matches, trace_idx, querystring, None)
 
-                if idx == -1:
-                    num_trace_match -=1
+                    if idx == -1:
+                        num_trace_match -=1
 
             return trace_matches
 
@@ -364,17 +365,23 @@ class MultidimQuery():
             return trace_matches
 
     def find_trace_matches(self, sample, dict_iter, trace_split_list, trace_matches, trace, letter_querystring, group):
-        if letter_querystring in dict_iter:
-            if trace in dict_iter[letter_querystring]:
-                if dict_iter[letter_querystring][trace] !=-1 and sample._sample[trace]:
-                    if trace not in trace_matches:
-                        trace_matches[trace]= {}
-                    trace_matches[trace][group]= dict_iter[letter_querystring][trace]
+
+        if trace_split_list[trace]:
+            if letter_querystring in dict_iter:
+                if trace in dict_iter[letter_querystring]:
+                    if dict_iter[letter_querystring][trace] !=-1 and sample._sample[trace]:
+                        if trace not in trace_matches:
+                            trace_matches[trace]= {}
+                        trace_matches[trace][group]= dict_iter[letter_querystring][trace]
+                else:
+                    self.update_trace_matches_dict(dict_iter, trace_split_list, trace_matches, trace, letter_querystring, group)
+                                    
             else:
                 self.update_trace_matches_dict(dict_iter, trace_split_list, trace_matches, trace, letter_querystring, group)
-                                
         else:
-            self.update_trace_matches_dict(dict_iter, trace_split_list, trace_matches, trace, letter_querystring, group)
+            if letter_querystring in dict_iter:
+                if trace in dict_iter[letter_querystring]:
+                    del dict_iter[letter_querystring][trace]
 
     def update_trace_matches_dict(self, dict_iter, trace_split_list, trace_matches, trace, letter_querystring, group):
         idx = self._smart_trace_match_multidim(letter_querystring, trace_split_list[trace], trace, dict_iter)

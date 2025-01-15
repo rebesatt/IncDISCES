@@ -4,12 +4,12 @@ import sys
 from collections import deque
 import time
 import os
-import pandas as pd
 import gzip
 import collections
 from copy import deepcopy
 from statistics import mean
 import seaborn as sns
+import pandas as pd
 
 sys.path.append('.')
 from src.discovery_bu_multidim import _next_queries_multidim, domain_unified_discovery_smarter
@@ -20,6 +20,8 @@ from src.updates import update_query_set
 
 def main():
     result_path =f'experiments/results'
+    if not os.path.exists(result_path):
+        os.makedirs(result_path)
     file_name = f'{result_path}/evaluation'
     file_path = f'{file_name}.csv'
     
@@ -86,7 +88,7 @@ def main():
                     trace_length = 7
                     max_query_length = 4
                     sample_size = 1000
-                    sample_path = 'datasets/google_query3_status1.txt.gz'
+                    sample_path = 'datasets/google_query3.txt.gz'
                     supp1 = 1
                     supp2 = 1
 
@@ -113,9 +115,9 @@ def main():
                     samples2_list.append(sample_list[:-i])
                 
                 samples1 = [samples2_list[-1], samples2_list[0], samples2_list[0], samples2_list[0], 
-                            samples2_list[5], samples2_list[0]]
+                            samples2_list[-1], samples2_list[0]]
                 samples2 = [samples2_list[:-1], samples2_list[1:], [samples2_list[0]], [samples2_list[0]],
-                            samples2_list[0:5], samples2_list[1:6]]
+                            samples2_list[0:10:2], samples2_list[1:11:2]]
                 supports1 = [supp1, supp1, 0.75, 1, 0.75, 1]
                 supports2 = [[supp2], [supp2], [0.8, 0.85, 0.9, 0.95, 1], [0.75, 0.8, 0.85, 0.9, 0.95],
                                                 [0.8, 0.85, 0.9, 0.95, 1], [0.75, 0.8, 0.85, 0.9, 0.95]]
@@ -318,16 +320,29 @@ def match_algos(sample1_list: list, samples2_list: list, supp1:float, supps2:lis
 
 def create_plots(dataframe:pd.DataFrame):
     df_gen_sample = dataframe.loc[(dataframe['iteration'] == 'gen') &
-                                 (dataframe['support 1']== dataframe['support 2'] )]
+                                 (dataframe['support 1']== dataframe['support 2'] )&
+                                 (dataframe['sample size 1']!= dataframe['sample size 2'] )]
+
     df_spec_sample = dataframe.loc[(dataframe['iteration'] == 'spec') &
-                                    (dataframe['support 1']== dataframe['support 2'] )]
-    
+                                    (dataframe['support 1']== dataframe['support 2'] )&
+                                 (dataframe['sample size 1']!= dataframe['sample size 2'] )]
+
     df_gen_supp = dataframe.loc[(dataframe['iteration'] == 'gen') &
-                                (dataframe['support 1']!= dataframe['support 2'] )]
-    
+                                (dataframe['support 1']!= dataframe['support 2'] )&
+                                 (dataframe['sample size 1']== dataframe['sample size 2'] )]
+
     df_spec_supp = dataframe.loc[(dataframe['iteration'] == 'spec') &
-                                 (dataframe['support 1']!= dataframe['support 2'] )]
-    
+                                 (dataframe['support 1']!= dataframe['support 2'] )&
+                                 (dataframe['sample size 1']== dataframe['sample size 2'] )]
+
+    df_gen_sampsupp = dataframe.loc[(dataframe['iteration'] == 'gen') &
+                                (dataframe['support 1']!= dataframe['support 2'] )&
+                                 (dataframe['sample size 1']!= dataframe['sample size 2'] )]
+
+    df_spec_sampsupp = dataframe.loc[(dataframe['iteration'] == 'spec') &
+                                 (dataframe['support 1']!= dataframe['support 2'] )&
+                                 (dataframe['sample size 1'] != dataframe['sample size 2'] )]
+
     results = []
     all_results = []
     sns.set_context('poster', font_scale=1.2) # rc={"lines.linewidth": 2.5})
@@ -335,18 +350,18 @@ def create_plots(dataframe:pd.DataFrame):
     for mode in df_gen_sample['mode'].unique():
         orig_sample_size = df_gen_sample.loc[(df_gen_sample['mode']==mode)]['sample size 1'].min()
         for samp2_size in df_gen_sample['sample size 2'].unique():
-            q1 = df_gen_sample.loc[(df_gen_sample['sample size 2']==samp2_size) & 
+            q1 = df_gen_sample.loc[(df_gen_sample['sample size 2']==samp2_size) &
                                    (df_gen_sample['mode']== mode)]['queryset size'].min()
-            q2 = df_gen_sample.loc[(df_gen_sample['sample size 2']==samp2_size) & 
+            q2 = df_gen_sample.loc[(df_gen_sample['sample size 2']==samp2_size) &
                                    (df_gen_sample['mode']== mode)]['searchspace'].min()
-            df_gen_sample_duc_time = df_gen_sample.loc[(df_gen_sample['sample size 2']==samp2_size) & 
+            df_gen_sample_duc_time = df_gen_sample.loc[(df_gen_sample['sample size 2']==samp2_size) &
                                                        (df_gen_sample['mode']== mode) &
                                                        (df_gen_sample['algorithm'] == 'duc' )]['time'].values
-            df_gen_sample_upd_time = df_gen_sample.loc[(df_gen_sample['sample size 2']==samp2_size) & 
+            df_gen_sample_upd_time = df_gen_sample.loc[(df_gen_sample['sample size 2']==samp2_size) &
                                                        (df_gen_sample['mode']== mode) &
                                                        (df_gen_sample['algorithm'] == 'updated' )]['time'].values
 
-            rel_timechange = [y / x for x,y in zip(sorted(df_gen_sample_upd_time), 
+            rel_timechange = [y / x for x,y in zip(sorted(df_gen_sample_upd_time),
                                                    sorted(df_gen_sample_duc_time))]
             if mode[0]=='F':
                 abstraction = 'finance'
@@ -358,13 +373,16 @@ def create_plots(dataframe:pd.DataFrame):
     columns = ['Added streams', 'Abstraction', 'Rel timechange', 'Dataset' ]
     df_plot = pd.DataFrame(results, columns=columns)
     grid = sns.relplot(data=df_plot, x='Added streams', y='Rel timechange', hue='Abstraction',
-                       col='Dataset', kind='line', style='Abstraction', markers=True, legend=False)
+                       col='Dataset', kind='line', style='Abstraction', markers=True, legend=True)
     grid.set(yscale='log', yticks= [1,10,100], xticks=[5,10])
+    plot_path ='experiments/plots'
+    if not os.path.exists(plot_path):
+        os.makedirs(plot_path)
     grid.savefig('experiments/plots/gen_sample.pdf')
 
     results = []
     for mode in df_gen_supp['mode'].unique():
-        
+
         for supp2 in df_gen_supp['support 2'].unique():
             q1 = df_gen_supp.loc[(df_gen_supp['mode']==mode)&
                                  ((df_gen_supp['support 2']==supp2))]['queryset size'].min()
@@ -420,25 +438,25 @@ def create_plots(dataframe:pd.DataFrame):
     columns = ['# Deleted streams', 'Abstraction', 'Rel timechange', 'Dataset' ]
     df_plot = pd.DataFrame(results, columns=columns)
     grid = sns.relplot(data=df_plot, x='# Deleted streams', y='Rel timechange', hue='Abstraction',
-                       col='Dataset', kind='line', style='Abstraction', markers=True, legend=False)
+                       col='Dataset', kind='line', style='Abstraction', markers=True, legend=True)
     grid.set(yscale='log', yticks= [1,10,100], xticks=[5,10])
     grid.savefig('experiments/plots/spec_sample.pdf')
 
     results = []
     for mode in df_spec_supp['mode'].unique():
         for supp2 in df_spec_supp['support 2'].unique():
-            q1 = df_spec_supp.loc[(df_spec_supp['support 2']==supp2) & 
+            q1 = df_spec_supp.loc[(df_spec_supp['support 2']==supp2) &
                                 (df_spec_supp['mode']== mode)]['queryset size'].min()
             q2 = df_spec_supp.loc[(df_spec_supp['support 2']==supp2) &
                                   (df_spec_supp['mode']== mode)]['searchspace'].min()
-            df_spec_supp_duc_time = df_spec_supp.loc[(df_spec_supp['support 2']==supp2) & 
+            df_spec_supp_duc_time = df_spec_supp.loc[(df_spec_supp['support 2']==supp2) &
                                                        (df_spec_supp['mode']== mode) &
                                                        (df_spec_supp['algorithm'] == 'duc' )]['time'].values
-            df_spec_supp_upd_time = df_spec_supp.loc[(df_spec_supp['support 2']==supp2) & 
+            df_spec_supp_upd_time = df_spec_supp.loc[(df_spec_supp['support 2']==supp2) &
                                                        (df_spec_supp['mode']== mode) &
                                                        (df_spec_supp['algorithm'] == 'updated' )]['time'].values
 
-            rel_timechange = [y / x for x,y in zip(sorted(df_spec_supp_upd_time), 
+            rel_timechange = [y / x for x,y in zip(sorted(df_spec_supp_upd_time),
                                                    sorted(df_spec_supp_duc_time))]
             if mode[0]=='F':
                 abstraction = 'finance'
@@ -454,13 +472,82 @@ def create_plots(dataframe:pd.DataFrame):
     grid.set(yscale='log', yticks= [1,10], xticks=[0.75, 0.85, .95])
     grid.savefig('experiments/plots/spec_supp.pdf')
 
-    columns = ['Change of Queryset size', 'Abstraction', 'Rel timechange', 'Dataset' ]
-    df_plot = pd.DataFrame(all_results, columns=columns)
-    grid = sns.relplot(data= df_plot, x= 'Change of Queryset size', y='Rel timechange', hue='Abstraction' )
-    grid.set(yscale='log', yticks= [1,10,100])
-    grid.savefig('experiments/plots/queryset_change1.pdf')
-    dataframe['Change of Queryset size'] = dataframe['queryset size'] - dataframe['searchspace']
-    grid = sns.relplot(data= dataframe, x= 'Change of Queryset size', y='time', hue='algorithm' )
-    grid.savefig('experiments/plots/queryset_change.pdf')
+    results = []
+    for mode in df_spec_sampsupp['mode'].unique():
+        # orig_sample_size = df_spec_sampsupp.loc[(df_spec_sampsupp['mode']==mode)]['sample size 1'].min()
+        # for samp2_size in df_spec_sampsupp['sample size 2'].unique():
+        #     q1 = df_spec_sampsupp.loc[(df_spec_sampsupp['sample size 2']==samp2_size) & 
+        #                             (df_spec_sampsupp['mode']== mode)]['queryset size'].min()
+        #     q2 = df_spec_sampsupp.loc[(df_spec_sampsupp['sample size 2']==samp2_size) & 
+        #                             (df_spec_sampsupp['mode']== mode)]['searchspace'].min()
+        #     df_spec_sampsupp_duc_time = df_spec_sampsupp.loc[(df_spec_sampsupp['sample size 2']==samp2_size) & 
+        #                                                (df_spec_sampsupp['mode']== mode) &
+        #                                                (df_spec_sampsupp['algorithm'] == 'duc' )]['time'].values
+        #     df_spec_sampsupp_upd_time = df_spec_sampsupp.loc[(df_spec_sampsupp['sample size 2']==samp2_size) & 
+        #                                                (df_spec_sampsupp['mode']== mode) &
+        #                                                (df_spec_sampsupp['algorithm'] == 'updated' )]['time'].values
+        for supp2 in df_spec_sampsupp['support 2'].unique():
+            q1 = df_spec_sampsupp.loc[(df_spec_sampsupp['support 2']==supp2) &
+                                (df_spec_sampsupp['mode']== mode)]['queryset size'].min()
+            q2 = df_spec_sampsupp.loc[(df_spec_sampsupp['support 2']==supp2) &
+                                  (df_spec_sampsupp['mode']== mode)]['searchspace'].min()
+            df_spec_sampsupp_duc_time = df_spec_sampsupp.loc[(df_spec_sampsupp['support 2']==supp2) &
+                                                       (df_spec_sampsupp['mode']== mode) &
+                                                       (df_spec_sampsupp['algorithm'] == 'duc' )]['time'].values
+            df_spec_sampsupp_upd_time = df_spec_sampsupp.loc[(df_spec_sampsupp['support 2']==supp2) &
+                                                       (df_spec_sampsupp['mode']== mode) &
+                                                       (df_spec_sampsupp['algorithm'] == 'updated' )]['time'].values
+
+
+
+            rel_timechange = [y / x for x,y in zip(sorted(df_spec_sampsupp_upd_time), 
+                                                   sorted(df_spec_sampsupp_duc_time))]
+            if mode[0]=='F':
+                abstraction = 'finance'
+            else:
+                abstraction = 'google'
+            for rtime in rel_timechange:
+                # results.append([orig_sample_size-samp2_size, mode, rtime, abstraction])
+                results.append([supp2, mode, rtime, abstraction])
+                all_results.append([q1-q2, mode, rtime,abstraction])
+    columns = ['New support', 'Abstraction', 'Rel timechange', 'Dataset' ]
+    df_plot = pd.DataFrame(results, columns=columns)
+    grid = sns.relplot(data=df_plot, x='New support', y='Rel timechange', hue='Abstraction',
+                       col='Dataset', kind='line', style='Abstraction', markers=True, legend=True)
+    grid.set(yscale='log', yticks= [1,10,100], xticks=[0.8, 0.9, 1.0])
+    grid.savefig('experiments/plots/spec_sampsupp.pdf')
+
+
+    results = []
+    for mode in df_gen_sampsupp['mode'].unique():
+
+        for supp2 in df_gen_sampsupp['support 2'].unique():
+            q1 = df_gen_sampsupp.loc[(df_gen_sampsupp['mode']==mode)&
+                                 ((df_gen_sampsupp['support 2']==supp2))]['queryset size'].min()
+            q2 = df_gen_sampsupp.loc[(df_gen_sampsupp['mode']==mode)&
+                                 ((df_gen_sampsupp['support 2']==supp2))]['searchspace'].min()
+            df_gen_sampsupp_duc_time = df_gen_sampsupp.loc[(df_gen_sampsupp['support 2']==supp2) & 
+                                                       (df_gen_sampsupp['mode']== mode) &
+                                                       (df_gen_sampsupp['algorithm'] == 'duc' )]['time'].values
+            df_gen_sampsupp_upd_time = df_gen_sampsupp.loc[(df_gen_sampsupp['support 2']==supp2) & 
+                                                       (df_gen_sampsupp['mode']== mode) &
+                                                       (df_gen_sampsupp['algorithm'] == 'updated' )]['time'].values
+
+            rel_timechange = [y / x for x,y in zip(sorted(df_gen_sampsupp_upd_time), 
+                                                   sorted(df_gen_sampsupp_duc_time))]
+            if mode[0]=='F':
+                abstraction = 'finance'
+            else:
+                abstraction = 'google'
+            for rtime in rel_timechange:
+                results.append([supp2, mode, rtime, abstraction])
+                all_results.append([q1-q2, mode, rtime,abstraction])
+    columns = ['New support', 'Abstraction', 'Rel timechange', 'Dataset' ]
+    df_plot = pd.DataFrame(results, columns=columns)
+    grid = sns.relplot(data=df_plot, x='New support', y='Rel timechange', hue='Abstraction',
+                       col='Dataset', kind='line', style='Abstraction', markers=True)
+    grid.set(yscale='log', yticks= [1,10,100], xticks=[0.8, 0.9, 1.0])
+    grid.savefig('experiments/plots/gen_sampsupp.pdf')
+
 if __name__ == "__main__":
     main()
