@@ -1,0 +1,768 @@
+@article{idris2020,
+  title = {General Dynamic {{Yannakakis}}: Conjunctive Queries with Theta Joins under Updates},
+  shorttitle = {General Dynamic {{Yannakakis}}},
+  author = {Idris, Muhammad and Ugarte, Mart{\'i}n and Vansummeren, Stijn and Voigt, Hannes and Lehner, Wolfgang},
+  year = {2020},
+  month = may,
+  journal = {The VLDB Journal},
+  volume = {29},
+  number = {2},
+  pages = {619--653},
+  issn = {0949-877X},
+  doi = {10.1007/s00778-019-00590-9},
+  urldate = {2024-07-29},
+  abstract = {The ability to efficiently analyze changing data is a key requirement of many real-time analytics applications. In prior work, we have proposed general dynamic Yannakakis (GDyn), a general framework for dynamically processing acyclic conjunctive queries with \$\${\textbackslash}theta \$\$-joins in the presence of data updates. Whereas traditional approaches face a trade-off between materialization of subresults (to avoid inefficient recomputation) and recomputation of subresults (to avoid the potentially large space overhead of materialization), GDyn is able to avoid this trade-off. It intelligently maintains a succinct data structure that supports efficient maintenance under updates and from which the full query result can quickly be enumerated. In this paper, we consolidate and extend the development of GDyn. First, we give full formal proof of GDyn 's correctness and complexity. Second, we present a novel algorithm for computing GDyn query plans. Finally, we instantiate GDyn to the case where all \$\${\textbackslash}theta \$\$-joins are inequalities and present extended experimental comparison against state-of-the-art engines. Our approach performs consistently better than the competitor systems with multiple orders of magnitude improvements in both time and memory consumption.},
+  langid = {english},
+  keywords = {Acyclic joins,Complex event processing,Dynamic query processing,Incremental view maintenance,Inequalities,Theta joins},
+  file = {C:\Users\rebec\Zotero\storage\QWQT8427\Idris et al. - 2020 - General dynamic Yannakakis conjunctive queries wi.pdf}
+}
+
+@misc{zheng2002,
+author       = {Qingguo Zheng and
+Ke Xu and
+Shilong Ma and
+Weifeng Lv},
+title        = {The Algorithms of Updating Sequetial Patterns},
+journal      = {CoRR},
+volume       = {cs.DB/0203027},
+year         = {2002},
+url          = {https://arxiv.org/abs/cs/0203027},
+timestamp    = {Fri, 10 Jan 2020 12:58:17 +0100},
+biburl       = {https://dblp.org/rec/journals/corr/cs-DB-0203027.bib},
+bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+@inproceedings{zheng2003,
+author       = {Qingguo Zheng and
+Ke Xu and
+Shilong Ma},
+editor       = {Kyu{-}Young Whang and
+Jongwoo Jeon and
+Kyuseok Shim and
+Jaideep Srivastava},
+title        = {When to Update the Sequential Patterns of Stream Data?},
+booktitle    = {Advances in Knowledge Discovery and Data Mining, 7th
+Pacific-Asia
+Conference, {PAKDD} 2003, Seoul, Korea, April 30 - May 2, 2003, Proceedings},
+series       = {Lecture Notes in Computer Science},
+volume       = {2637},
+pages        = {545--550},
+publisher    = {Springer},
+year         = {2003},
+url          = {https://doi.org/10.1007/3-540-36175-8\_54},
+doi          = {10.1007/3-540-36175-8\_54},
+timestamp    = {Tue, 14 May 2019 10:00:51 +0200},
+biburl       = {https://dblp.org/rec/conf/pakdd/ZhengXM03.bib},
+bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+@article{mallick2013,
+  title = {Incremental Mining of Sequential Patterns: {{Progress}} and Challenges},
+  shorttitle = {Incremental Mining of Sequential Patterns},
+  author = {Mallick, Bhawna and Garg, Deepak and Grover, P. S.},
+  year = {2013},
+  month = jan,
+  journal = {Intelligent Data Analysis},
+  volume = {17},
+  number = {3},
+  pages = {507--530},
+  publisher = {IOS Press},
+  issn = {1088-467X},
+  doi = {10.3233/IDA-130591},
+  urldate = {2024-07-31},
+  abstract = {Sequential pattern mining is a vital problem with broad applications. However, it is also challenging, as combinatorial high number of intermediate subsequences are generated that have to be critically examined. Most of the basic solutions are based},
+  langid = {english},
+  file = {C:\Users\rebec\Zotero\storage\8QME7F4Q\Mallick et al. - 2013 - Incremental mining of sequential patterns Progres.pdf}
+}
+
+@article{yun2015,
+  title = {Incremental High Utility Pattern Mining with Static and Dynamic Databases},
+  author = {Yun, Unil and Ryang, Heungmo},
+  year = {2015},
+  month = mar,
+  journal = {Applied Intelligence},
+  volume = {42},
+  number = {2},
+  pages = {323--352},
+  issn = {1573-7497},
+  doi = {10.1007/s10489-014-0601-6},
+  urldate = {2024-07-31},
+  abstract = {Pattern mining is a data mining technique used for discovering significant patterns and has been applied to various applications such as disease analysis in medical databases and decision making in business. Frequent pattern mining based on item frequencies is the most fundamental topic in the pattern mining field. However, it is difficult to discover the important patterns on the basis of only frequencies since characteristics of real-world databases such as relative importance of items and non-binary transactions are not reflected. In this regard, utility pattern mining has been considered as an emergent research topic that deals with the characteristics. In real-world applications, meanwhile newly generated data by continuous operation or data in other databases for integration analysis can be gradually added to the current database. To efficiently deal with both existing and new data as a database, it is necessary to reflect increased data to previous analysis results without analyzing the whole database again. In this paper, we propose an algorithm called HUPID-Growth (High Utility Patterns in Incremental Databases Growth) for mining high utility patterns in incremental databases. Moreover, we suggest a tree structure constructed with a single database scan named HUPID-Tree (High Utility Patterns in Incremental Databases Tree), and a restructuring method with a novel data structure called TIList (Tail-node Information List) in order to process incremental databases more efficiently. We conduct various experiments for performance evaluation with state-of-the-art algorithms. The experimental results show that the proposed algorithm more efficiently processes real datasets compared to previous ones.},
+  langid = {english},
+  keywords = {Data mining,Frequent pattern mining,High utility patterns,Incremental mining,Static and dynamic databases},
+  file = {C:\Users\rebec\Zotero\storage\E4H9CQHN\Yun und Ryang - 2015 - Incremental high utility pattern mining with stati.pdf}
+}
+
+@techreport{disces_TR,
+  author      = {Anonymized Authors},
+	title       = {DISCES: Systematic Discovery of Event Stream Queries --
+	Technical Report},
+	url 		= {https://anonymous.4open.science/r/disces-0E5B/},
+	year        = {2024}
+}
+
+
+@misc{eodata,
+	author      = {EODData},
+	title = {{NASDAQ} Intra-Day Data},
+	year        = {2015},
+	howpublished = {\url{https://eoddata.com/}},
+	note = {Accessed: 2015-09-27}
+}
+
+
+@article{DBLP:journals/vldb/ArasuBW06,
+  author       = {Arvind Arasu and
+                  Shivnath Babu and
+                  Jennifer Widom},
+  title        = {The {CQL} continuous query language:
+  semantic foundations and query
+                  execution},
+  journal      = {{VLDB} J.},
+  volume       = {15},
+  number       = {2},
+  pages        = {121--142},
+  year         = {2006},
+  url          =
+  {https://doi.org/10.1007/s00778-004-0147-z},
+  doi          = {10.1007/s00778-004-0147-z},
+  timestamp    = {Wed, 14 Nov 2018 10:27:40 +0100},
+  biburl       =
+  {https://dblp.org/rec/journals/vldb/ArasuBW06.bib},
+  bibsource    = {dblp computer science bibliography,
+  https://dblp.org}
+}
+
+
+
+@inproceedings{DBLP:conf/debs/EngelEF12,
+  author       = {Yagil Engel and
+                  Opher Etzion and
+                  Zohar Feldman},
+  editor       = {Fran{\c{c}}ois Bry and
+                  Adrian Paschke and
+                  Patrick Th. Eugster and
+                  Christof Fetzer and
+                  Andreas Behrend},
+  title        = {A basic model for proactive event-driven computing},
+  booktitle    = {Proceedings of the Sixth {ACM} International Conference on
+  Distributed
+                  Event-Based Systems, {DEBS} 2012, Berlin, Germany, July
+                  16-20, 2012},
+  pages        = {107--118},
+  publisher    = {{ACM}},
+  year         = {2012},
+  url          = {https://doi.org/10.1145/2335484.2335496},
+  doi          = {10.1145/2335484.2335496},
+  timestamp    = {Tue, 06 Nov 2018 11:07:34 +0100},
+  biburl       = {https://dblp.org/rec/conf/debs/EngelEF12.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+
+
+@inproceedings{DBLP:conf/debs/SejdovicHRS16,
+  author       = {Suad Sejdovic and
+                  Yvonne Hegenbarth and
+                  Gerald H. Ristow and
+                  Roland Schmidt},
+  editor       = {Avigdor Gal and
+                  Matthias Weidlich and
+                  Vana Kalogeraki and
+                  Nalini Venkasubramanian},
+  title        = {Proactive disruption management system: how not to be
+  surprised by
+                  upcoming situations},
+  booktitle    = {Proceedings of the 10th {ACM} International Conference on
+  Distributed
+                  and Event-based Systems, {DEBS} '16, Irvine, CA, USA, June 20
+                  - 24,
+                  2016},
+  pages        = {281--288},
+  publisher    = {{ACM}},
+  year         = {2016},
+  url          = {https://doi.org/10.1145/2933267.2933271},
+  doi          = {10.1145/2933267.2933271},
+  timestamp    = {Fri, 26 May 2023 07:40:34 +0200},
+  biburl       = {https://dblp.org/rec/conf/debs/SejdovicHRS16.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+
+@inproceedings{DBLP:conf/debs/ArtikisMUVW17,
+  author       = {Alexander Artikis and
+                  Alessandro Margara and
+                  Mart{\'{\i}}n Ugarte and
+                  Stijn Vansummeren and
+                  Matthias Weidlich},
+  title        = {Complex Event Recognition Languages: Tutorial},
+  booktitle    = {Proceedings of the 11th {ACM} International Conference on
+  Distributed
+                  and Event-based Systems, {DEBS} 2017, Barcelona, Spain, June
+                  19-23,
+                  2017},
+  pages        = {7--10},
+  publisher    = {{ACM}},
+  year         = {2017},
+  url          = {https://doi.org/10.1145/3093742.3095106},
+  doi          = {10.1145/3093742.3095106},
+  timestamp    = {Fri, 26 May 2023 07:40:34 +0200},
+  biburl       = {https://dblp.org/rec/conf/debs/ArtikisMUVW17.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+@article{ilminer,
+author = {George, Lars and Cadonna, Bruno and Weidlich, Matthias},
+title = {IL-Miner: Instance-Level Discovery of Complex Event Patterns},
+year = {2016},
+issue_date = {September 2016},
+publisher = {VLDB Endowment},
+volume = {10},
+number = {1},
+issn = {2150-8097},
+url = {https://doi.org/10.14778/3015270.3015273},
+doi = {10.14778/3015270.3015273},
+journal = {Proc. VLDB Endow.},
+month = sep,
+pages = {25–36},
+numpages = {12},
+keywords = {event processing, pattern mining, machine learning}
+}
+
+@inproceedings{yanli2021,
+author = {Li, Yan and Ge, Tingjian},
+title = {Imminence Monitoring of Critical Events: A Representation Learning Approach},
+year = {2021},
+isbn = {9781450383431},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3448016.3452804},
+doi = {10.1145/3448016.3452804},
+booktitle = {Proceedings of the 2021 International Conference on Management of Data},
+pages = {1103–1115},
+numpages = {13},
+keywords = {imminence monitoring, data streams, representation learning},
+location = {Virtual Event, China},
+series = {SIGMOD/PODS '21}
+}
+
+
+
+@article{DBLP:journals/csur/CugolaM12,
+  author       = {Gianpaolo Cugola and
+                  Alessandro},
+  title        = {Processing flows of information: From data stream to complex
+  event
+                  processing},
+  journal      = {{ACM} Comput. Surv.},
+  volume       = {44},
+  number       = {3},
+  pages        = {15:1--15:62},
+  year         = {2012},
+  url          = {https://doi.org/10.1145/2187671.2187677},
+  doi          = {10.1145/2187671.2187677},
+  timestamp    = {Fri, 30 Nov 2018 12:48:46 +0100},
+  biburl       = {https://dblp.org/rec/journals/csur/CugolaM12.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+
+@article{DBLP:journals/cii/KonovalenkoL19,
+  author       = {Iurii Konovalenko and
+                  Andr{\'{e}} Ludwig},
+  title        = {Event processing in supply chain management - The status quo
+  and research
+                  outlook},
+  journal      = {Comput. Ind.},
+  volume       = {105},
+  pages        = {229--249},
+  year         = {2019},
+  url          = {https://doi.org/10.1016/j.compind.2018.12.009},
+  doi          = {10.1016/j.compind.2018.12.009},
+  timestamp    = {Thu, 14 Oct 2021 08:56:35 +0200},
+  biburl       = {https://dblp.org/rec/journals/cii/KonovalenkoL19.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+
+@article{DBLP:journals/computer/ChandramouliAGSR10,
+  author       = {Badrish Chandramouli and
+                  Mohamed H. Ali and
+                  Jonathan Goldstein and
+                  Beysim Sezgin and
+                  Balan Sethu Raman},
+  title        = {Data Stream Management Systems for Computational Finance},
+  journal      = {Computer},
+  volume       = {43},
+  number       = {12},
+  pages        = {45--52},
+  year         = {2010},
+  url          = {https://doi.org/10.1109/MC.2010.346},
+  doi          = {10.1109/MC.2010.346},
+  timestamp    = {Wed, 12 Aug 2020 10:31:03 +0200},
+  biburl       =
+  {https://dblp.org/rec/journals/computer/ChandramouliAGSR10.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+
+@inproceedings{DBLP:conf/edbt/ArtikisWSBLPBMKMGMGK14,
+  author       = {Alexander Artikis and
+                  Matthias Weidlich and
+                  Fran{\c{c}}ois Schnitzler and
+                  Ioannis Boutsis and
+                  Thomas Liebig and
+                  Nico Piatkowski and
+                  Christian Bockermann and
+                  Katharina Morik and
+                  Vana Kalogeraki and
+                  Jakub Marecek and
+                  Avigdor Gal and
+                  Shie Mannor and
+                  Dimitrios Gunopulos and
+                  Dermot Kinane},
+  editor       = {Sihem Amer{-}Yahia and
+                  Vassilis Christophides and
+                  Anastasios Kementsietsidis and
+                  Minos N. Garofalakis and
+                  Stratos Idreos and
+                  Vincent Leroy},
+  title        = {Heterogeneous Stream Processing and Crowdsourcing for Urban
+  Traffic
+                  Management},
+  booktitle    = {Proceedings of the 17th International Conference on Extending
+  Database
+                  Technology, {EDBT} 2014, Athens, Greece, March 24-28, 2014},
+  pages        = {712--723},
+  publisher    = {OpenProceedings.org},
+  year         = {2014},
+  url          = {https://doi.org/10.5441/002/edbt.2014.77},
+  doi          = {10.5441/002/edbt.2014.77},
+  timestamp    = {Fri, 26 May 2023 07:40:34 +0200},
+  biburl       = {https://dblp.org/rec/conf/edbt/ArtikisWSBLPBMKMGMGK14.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+
+@inproceedings{icep,
+author = {Margara, Alessandro and Cugola, Gianpaolo and Tamburrelli, Giordano},
+title = {Learning from the Past: Automated Rule Generation for Complex Event Processing},
+year = {2014},
+isbn = {9781450327374},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/2611286.2611289},
+doi = {10.1145/2611286.2611289},
+booktitle = {Proceedings of the 8th ACM International Conference on Distributed Event-Based Systems},
+pages = {47–58},
+numpages = {12},
+keywords = {rule generation, learning, complex event processing},
+location = {Mumbai, India},
+series = {DEBS '14}
+}
+
+@inproceedings{autoCEP,
+author = {Mousheimish, Raef and Taher, Yehia and Zeitouni, Karine},
+title = {Automatic Learning of Predictive CEP Rules: Bridging the Gap between Data Mining and Complex Event Processing},
+year = {2017},
+isbn = {9781450350655},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3093742.3093917},
+doi = {10.1145/3093742.3093917},
+booktitle = {Proceedings of the 11th ACM International Conference on Distributed and Event-Based Systems},
+pages = {158–169},
+numpages = {12},
+keywords = {Time Series Data Mining, Early Classification, Complex Event Processing, Rule Discovery, Multivariate Time Series},
+location = {Barcelona, Spain},
+series = {DEBS '17}
+}
+
+@article{ARECEP,
+  title={A deep learning-based CEP rule extraction framework for IoT data},
+  author={Simsek, Mehmet Ulvi and Okay, Feyza Yildirim and Ozdemir, Suat},
+  journal={The Journal of Supercomputing},
+  pages={1--30},
+  year={2021},
+  publisher={Springer}
+}
+
+@article{crossmatch,
+  title={Pattern discovery in data streams under the time warping distance},
+  author={Toyoda, Machiko and Sakurai, Yasushi and Ishikawa, Yoshiharu},
+  journal={The VLDB Journal},
+  volume={22},
+  number={3},
+  pages={295--318},
+  year={2013},
+  publisher={Springer}
+}
+
+@article{DBLP:journals/vldb/GiatrakosAADG20,
+	author    = {Nikos Giatrakos and
+	Elias Alevizos and
+	Alexander Artikis and
+	Antonios Deligiannakis and
+	Minos N. Garofalakis},
+	title     = {Complex event recognition in the Big Data era: a survey},
+	journal   = {{VLDB} J.},
+	volume    = {29},
+	number    = {1},
+	pages     = {313--352},
+	year      = {2020},
+	url       = {https://doi.org/10.1007/s00778-019-00557-w},
+	doi       = {10.1007/s00778-019-00557-w},
+	timestamp = {Mon, 26 Oct 2020 08:40:21 +0100},
+	biburl    = {https://dblp.org/rec/journals/vldb/GiatrakosAADG20.bib},
+	bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{reiss2011google,
+  title={Google cluster-usage traces: format+ schema},
+  author={Reiss, Charles and Wilkes, John and Hellerstein, Joseph L},
+  journal={Google Inc., White Paper},
+  volume={1},
+  pages={1--14},
+  year={2011}
+}
+
+
+@article{reiss2012towards,
+  title={Towards understanding heterogeneous clouds at scale: Google trace analysis},
+  author={Reiss, Charles and Tumanov, Alexey and Ganger, Gregory R and Katz, Randy H and Kozuch, Michael A},
+  journal={Intel Science and Technology Center for Cloud Computing, Tech. Rep},
+  volume={84},
+  pages={1--12},
+  year={2012}
+}
+
+@inproceedings{10.1007/978-3-319-06483-3_8,
+author="Fournier-Viger, Philippe
+and Wu, Cheng-Wei
+and Gomariz, Antonio
+and Tseng, Vincent S.",
+editor="Sokolova, Marina
+and van Beek, Peter",
+title="VMSP: Efficient Vertical Mining of Maximal Sequential Patterns",
+booktitle="Advances in Artificial Intelligence",
+year="2014",
+publisher="Springer International Publishing",
+address="Cham",
+pages="83--94",
+isbn="978-3-319-06483-3"
+}
+
+@inproceedings{10.1007/978-3-642-53914-5_15,
+author="Fournier-Viger, Philippe
+and Wu, Cheng-Wei
+and Tseng, Vincent S.",
+editor="Motoda, Hiroshi
+and Wu, Zhaohui
+and Cao, Longbing
+and Zaiane, Osmar
+and Yao, Min
+and Wang, Wei",
+title="Mining Maximal Sequential Patterns without Candidate Maintenance",
+booktitle="Advanced Data Mining and Applications",
+year="2013",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="169--180",
+isbn="978-3-642-53914-5"
+}
+
+@article{10.1145/2757217,
+author = {Beedkar, Kaustubh and Berberich, Klaus and Gemulla, Rainer and Miliaraki, Iris},
+title = {Closing the Gap: Sequence Mining at Scale},
+year = {2015},
+issue_date = {June 2015},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {40},
+number = {2},
+issn = {0362-5915},
+url = {https://doi.org/10.1145/2757217},
+doi = {10.1145/2757217},
+journal = {ACM Trans. Database Syst.},
+month = {jun},
+articleno = {8},
+numpages = {44},
+keywords = {frequent sequence mining, MapReduce, Data mining}
+}
+
+@inproceedings{DBLP:conf/cikm/GuoSA15,
+	author    = {Tian Guo and
+	Saket Sathe and
+	Karl Aberer},
+	editor    = {James Bailey and
+	Alistair Moffat and
+	Charu C. Aggarwal and
+	Maarten de Rijke and
+	Ravi Kumar and
+	Vanessa Murdock and
+	Timos K. Sellis and
+	Jeffrey Xu Yu},
+	title     = {Fast Distributed Correlation Discovery Over Streaming
+	Time-Series
+	Data},
+	booktitle = {Proceedings of the 24th {ACM} International Conference on
+	Information
+	and Knowledge Management, {CIKM} 2015, Melbourne, VIC, Australia,
+	October 19 - 23, 2015},
+	pages     = {1161--1170},
+	publisher = {{ACM}},
+	year      = {2015},
+	url       = {https://doi.org/10.1145/2806416.2806440},
+	doi       = {10.1145/2806416.2806440},
+	timestamp = {Mon, 26 Apr 2021 09:27:03 +0200},
+	biburl    = {https://dblp.org/rec/conf/cikm/GuoSA15.bib},
+	bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+@inproceedings{DBLP:conf/sigmod/ZhangDI14,
+	author    = {Haopeng Zhang and
+	Yanlei Diao and
+	Neil Immerman},
+	editor    = {Curtis E. Dyreson and
+	Feifei Li and
+	M. Tamer {\"{O}}zsu},
+	title     = {On complexity and optimization of expensive queries in complex
+	event
+	processing},
+	booktitle = {International Conference on Management of Data, {SIGMOD} 2014,
+	Snowbird,
+	UT, USA, June 22-27, 2014},
+	pages     = {217--228},
+	publisher = {{ACM}},
+	year      = {2014},
+	url       = {https://doi.org/10.1145/2588555.2593671},
+	doi       = {10.1145/2588555.2593671},
+	timestamp = {Thu, 18 Apr 2019 18:05:39 +0200},
+	biburl    = {https://dblp.org/rec/conf/sigmod/ZhangDI14.bib},
+	bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+
+@inproceedings{agrawal1995,
+  title={Mining sequential patterns},
+  author={Agrawal, Rakesh and Srikant, Ramakrishnan},
+  booktitle={Proceedings of the eleventh international conference on data engineering},
+  pages={3--14},
+  year={1995},
+  organization={IEEE}
+}
+
+@inproceedings{clospan,
+  title={CloSpan: Mining: Closed sequential patterns in large datasets},
+  author={Yan, Xifeng and Han, Jiawei and Afshar, Ramin},
+  booktitle={Proceedings of the 2003 SIAM international conference on data mining},
+  pages={166--177},
+  year={2003},
+  organization={SIAM}
+}
+
+@inproceedings{bide,
+  title={BIDE: Efficient mining of frequent closed sequences},
+  author={Wang, Jianyong and Han, Jiawei},
+  booktitle={Proceedings. 20th international conference on data engineering},
+  pages={79--90},
+  year={2004},
+  organization={IEEE}
+}
+
+@article{spirit,
+  title={Mining sequential patterns with regular expression constraints},
+  author={Garofalakis, Minos and Rastogi, Rajeev and Shim, Kyuseok},
+  journal={IEEE Transactions on knowledge and data engineering},
+  volume={14},
+  number={3},
+  pages={530--552},
+  year={2002},
+  publisher={IEEE}
+}
+
+@article{streaming,
+  title={Streaming pattern discovery in multiple time-series},
+  author={Papadimitriou, Spiros and Sun, Jimeng and Faloutsos, Christos},
+  year={2005},
+  publisher={Carnegie Mellon University}
+}
+
+
+
+@article{sase,
+  title={SASE: Complex event processing over streams},
+  author={Gyllstrom, Daniel and Wu, Eugene and Chae, Hee-Jin and Diao, Yanlei and Stahlberg, Patrick and Anderson, Gordon},
+  journal={arXiv preprint cs/0612128},
+  year={2006}
+}
+
+@techreport{minartz2021multivariate,
+  title={Multivariate correlations discovery in static and streaming data},
+  author={Minartz, Koen and d'Hondt, Jens and Papapetrou, Odysseas},
+  year={2021},
+  institution={Tech. rep. Available in https://github. com/JdHondt/CorrelationDetective~…}
+}
+
+
+@inproceedings{DBLP:conf/btw/Kleest-Meissner23,
+  author       = {Sarah Kleest{-}Mei{\ss}ner and
+                  Rebecca Sattler and
+                  Markus L. Schmid and
+                  Nicole Schweikardt and
+                  Matthias Weidlich},
+  editor       = {Birgitta K{\"{o}}nig{-}Ries and
+                  Stefanie Scherzinger and
+                  Wolfgang Lehner and
+                  Gottfried Vossen},
+  title        = {Discovering Multi-Dimensional
+  Subsequence Queries from Traces - From
+                  Theory to Practice},
+  booktitle    = {Datenbanksysteme f{\"{u}}r Business,
+  Technologie und Web {(BTW}
+                  2023), 20. Fachtagung des
+                  GI-Fachbereichs ,,Datenbanken und
+                  Informationssysteme"
+                  (DBIS), 06.-10, M{\"{a}}rz 2023,
+                  Dresden, Germany, Proceedings},
+  series       = {{LNI}},
+  volume       = {{P-331}},
+  pages        = {511--533},
+  publisher    = {Gesellschaft f{\"{u}}r Informatik
+  e.V.},
+  year         = {2023},
+  url          = {https://doi.org/10.18420/BTW2023-24},
+  doi          = {10.18420/BTW2023-24},
+  timestamp    = {Tue, 04 Jul 2023 17:43:13 +0200},
+  biburl       =
+  {https://dblp.org/rec/conf/btw/Kleest-Meissner23.bib},
+  bibsource    = {dblp computer science bibliography,
+  https://dblp.org}
+}
+
+@article{yu2011bus,
+  title={Bus arrival time prediction at bus stop with multiple routes},
+  author={Yu, Bin and Lam, William HK and Tam, Mei Lam},
+  journal={Transportation Research Part C: Emerging Technologies},
+  volume={19},
+  number={6},
+  pages={1157--1170},
+  year={2011},
+  publisher={Elsevier}
+}
+
+
+
+@inproceedings{icdt2022,
+  author       = {Sarah Kleest{-}Mei{\ss}ner and
+                  Rebecca Sattler and
+                  Markus L. Schmid and
+                  Nicole Schweikardt and
+                  Matthias Weidlich},
+  editor       = {Dan Olteanu and
+                  Nils Vortmeier},
+  title        = {Discovering Event Queries from
+  Traces: Laying Foundations for Subsequence-Queries
+                  with Wildcards and Gap-Size
+                  Constraints},
+  booktitle    = {25th International Conference on
+  Database Theory, {ICDT} 2022, March
+                  29 to April 1, 2022, Edinburgh, {UK}
+                  (Virtual Conference)},
+  series       = {LIPIcs},
+  volume       = {220},
+  pages        = {18:1--18:21},
+  publisher    = {Schloss Dagstuhl - Leibniz-Zentrum
+  f{\"{u}}r Informatik},
+  year         = {2022},
+  url          =
+  {https://doi.org/10.4230/LIPIcs.ICDT.2022.18},
+  doi          = {10.4230/LIPIcs.ICDT.2022.18},
+  timestamp    = {Fri, 26 May 2023 07:40:33 +0200},
+  biburl       =
+  {https://dblp.org/rec/conf/icdt/Kleest-Meissner22.bib},
+  bibsource    = {dblp computer science bibliography,
+  https://dblp.org}
+}
+
+@inproceedings{DayEtAl2022,
+  author       = {Joel D. Day and
+                  Maria Kosche and
+                  Florin Manea and
+                  Markus L. Schmid},
+  title        = {Subsequences with Gap Constraints: Complexity Bounds for Matching
+                  and Analysis Problems},
+  booktitle    = {33rd International Symposium on Algorithms and Computation, {ISAAC}
+                  2022, December 19-21, 2022, Seoul, Korea},
+  pages        = {64:1--64:18},
+  year         = {2022},
+  url          = {https://doi.org/10.4230/LIPIcs.ISAAC.2022.64},
+  doi          = {10.4230/LIPICS.ISAAC.2022.64},
+}
+
+@inproceedings{KoscheEtAl2022,
+  author       = {Maria Kosche and
+                  Tore Ko{\ss} and
+                  Florin Manea and
+                  Stefan Siemer},
+  title        = {Combinatorial Algorithms for Subsequence Matching: {A} Survey},
+  booktitle    = {Proceedings 12th International Workshop on Non-Classical Models of
+                  Automata and Applications, {NCMA} 2022, Debrecen, Hungary, August
+                  26-27, 2022},
+  pages        = {11--27},
+  year         = {2022},
+  url          = {https://doi.org/10.4204/EPTCS.367.2},
+  doi          = {10.4204/EPTCS.367.2},
+}
+
+
+@inproceedings{fournier2011rulegrowth,
+  title={RuleGrowth: mining sequential rules common to several sequences by pattern-growth},
+  author={Fournier-Viger, Philippe and Nkambou, Roger and Tseng, Vincent Shin-Mu},
+  booktitle={Proceedings of the 2011 ACM symposium on applied computing},
+  pages={956--961},
+  year={2011}
+}
+
+@InProceedings{erminer,
+author="Fournier-Viger, Philippe
+and Gueniche, Ted
+and Zida, Souleymane
+and Tseng, Vincent S.",
+editor="Blockeel, Hendrik
+and van Leeuwen, Matthijs
+and Vinciotti, Veronica",
+title="ERMiner: Sequential Rule Mining Using Equivalence Classes",
+booktitle="Advances in Intelligent Data Analysis XIII",
+year="2014",
+publisher="Springer International Publishing",
+address="Cham",
+pages="108--119",
+isbn="978-3-319-12571-8"
+}
+
+@InProceedings{ierminer,
+author="Drozdyuk, Andriy
+and Buffett, Scott
+and Fleming, Michael W.",
+editor="Goutte, Cyril
+and Zhu, Xiaodan",
+title="Incremental Sequential Rule Mining with Streaming Input Traces",
+booktitle="Advances in Artificial Intelligence",
+year="2020",
+publisher="Springer International Publishing",
+address="Cham",
+pages="79--91",
+isbn="978-3-030-47358-7"
+}

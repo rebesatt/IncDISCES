@@ -1,0 +1,295 @@
+\section{Experimental Evaluation}
+\label{sec:evaluation}
+% \todo[inline]{R2 on scalability: Note that the scalability is not directly affected by the size of the stream database, $|D|$,
+% but rather by the structure of the streams. A small database with complex,
+% repetitive patterns can cause combinatorial explosions in candidate queries, leading to runtimes of minutes or hours.
+% Conversely, a large database with simple, non-repetitive patterns may be processed in seconds.
+% Thus, scalability evaluations based on $|D|$ or the alphabet size $|\Gamma|$ are unreliable, as runtime depends heavily on stream structure.
+% One explanation for the difference in the datasets is the size of the queryset.
+% If for example, the queryset stays the same after updating the database, then the updated algorithm will terminate quickly
+% whereas the baseline algorithm has to rediscover all matching queries. We will add the explanation to the final version of the paper.}
+
+This section presents an evaluation of the algorithms proposed in
+\autoref{sec:algos}. We
+first introduce our experimental setup (\autoref{sec:exp_setup}), before
+comparing our algorithms for incremental event query discovery against a
+baseline solution (\autoref{sec:exp_sota}).
+% Finally, we evaluate the sensitivity of
+% our algorithms with respect to the characteristics of a stream database
+% (\autoref{sec:exp_sensitity}), before studying the effectiveness of our
+% strategies to guide the application of discovery algorithms
+% (\autoref{sec:exp_guidance}).
+
+\subsection{Experimental Setup}
+\label{sec:exp_setup}
+
+\sstitle{Datasets}
+We use two real-world datasets to evaluate our algorithms, namely
+ NASDAQ stock trade events~\cite{eodata}
+and the Google cluster traces~\cite{reiss2011google}.
+We adopted the methodology for obtaining stream databases from the~\cite{ilminer}.
+For each dataset, we define three queries to generate streams, as described below.
+
+The attributes considered in the finance data are:
+% The event schema for the finance data comprises three attributes:
+stock name, volume, and closing value. The queries to construct streams
+capture
+two events with stock name `GOOG' (F1); three events with stock names
+appearing in the sequence `AAPL', `GOOG', and `MSFT' (F2); and four events
+for which the volume remains constant (F3).
+
+Events in the Google cluster traces contain four attributes:
+job ID, machine ID, task status, and priority. One query
+defines three events running on the same machine with identical job IDs,
+with the first and last ones of status `submit', while the
+second one has
+status `kill' (G1); one query encompasses four events
+executing on the same
+machine with status `finish' (G2); and one query detects job eviction
+resulting from the scheduling of another job on the same
+machine (G3).
+
+Using these queries, we generated the stream databases summarized in
+\autoref{tab:databases} by evaluating the queries over the
+datasets. For each match (of the first at most 1000 matches), we constructed a
+stream by including the events preceding the match.
+The number of events taken into account for each stream
+ is detailed in the column 'stream length'.
+
+
+\begin{table}[h]
+	\caption{Stream databases used in the experiments.}
+	\label{tab:databases}
+	\small
+	% \vspace{-1.2em}
+	\centering
+	\begin{tabular}{c c c c c }
+		\toprule
+		\multicolumn{2}{c}{}          & stream
+			length& number
+			of
+			streams\\%& \begin{tabular}[c]{@{}c@{}}support\\
+			%threshold\end{tabular} \\
+		\midrule
+		\multirow{3}{*}{Finance} & F1 & 50                    &
+		69-79                                                           \\
+		& F2 & 40
+		& 990-1000                                                       \\
+		& F3 & 25
+		& 240-250                                                           \\
+		%\midrule
+		\multirow{1}{*}{Google}  & G1-G3 & 7              &
+		990-1000                                                         \\
+		\bottomrule
+	\end{tabular}
+	%\vspace{-1em}
+\end{table}
+
+Note that the runtime is not determined by the size of the stream database,
+$|D|$, but rather by the structure of the streams. A small database with intricate and repetitive patterns can trigger
+a combinatorial explosion of candidate queries, leading to runtimes of minutes or hours.
+Conversely, a large database with simple, non-repetitive patterns may be processed in a matter of seconds.
+
+\sstitle{Baseline}
+% \todo[inline]{RS: Add experiments for combined updates.}
+We compare the runtime of our algorithms making use of incremental updates against
+the baseline approach, in which no prior information is given to the
+discovery.
+
+
+\sstitle{Measures} We primarily measure the efficiency of event query
+discovery in terms of the algorithms' runtime. We report averages over five
+experimental runs, including error bars (mostly negligible).
+%For each stream database, the query discovery was repeated 5 times and the
+%average runtime is plotted including the confidence interval error bars.
+
+\sstitle{Environment and Implementation}
+We implemented the whole experimental evaluation in Python.
+The code and the evaluation routine is publicly available on GitHub\footnote{https://github.com/rebesatt/IncDISCES}.
+All experiments were conducted on a server with a E7-4880 CPU @2.5GHz and
+1TB of RAM.
+\subsection{Baseline Comparison}
+\label{sec:exp_sota}
+
+% We first conducted experiments on the datasets described in \autoref{tab:databases}
+% by decreasing the space of candidate queries, i.e., by adding streams, by
+% increasing the support threshold or both.
+We first conducted experiments on the datasets described in \autoref{tab:databases} by reducing
+the candidate query space—either by adding streams, increasing the support threshold, or both.
+
+In \autoref{fig:gen_sample}, we plotted the relative time change of the
+incremental algorithm
+compared to the baseline, when adding up to 10 streams to the different
+stream databases.
+It can be seen that our incremental algorithm is at least an order of
+magnitude faster for all settings.
+For the google dataset G1, the improvement is even up to three orders of
+magnitude.
+
+In \autoref{fig:gen_supp}, we consider the change of increasing the support
+threshold.
+The original support threshold is 0.75, which is increased stepwise, up to
+1.0.
+Here, we see a drop in the relative time change for increasing support
+values. This is
+especially true for the finance stream databases. One reason for this
+observation is the
+decreasing search space. For example, the number of queries for F1 and
+support threshold
+1.0 is four. As consequence, both, the baseline and the incremental
+algorithm terminate quickly, in less than a second.
+
+% In \autoref{fig:gen_sampsupp}, we consider the simulatenous change of increasing the support
+% threshold and added streams.
+
+In \autoref{fig:gen_sampsupp}, we examine the simultaneous effect
+of increasing the support threshold and adding streams.
+Like in the previous experiment, the original support threshold is 0.75 and
+is increased stepwise up to 1.0. At the same time, for each step, we add
+one stream to the stream database.
+Similar to \autoref{fig:gen_supp}, we see a drop in the relative time change
+for increasing support values, but still the runtime of the incremental algorithm is
+always lower than the baseline solution.
+
+
+% \begin{figure}[t]
+% 	\centering
+% 	\begin{subfigure}{.63\textwidth}
+% 	  \centering
+% 	  \includegraphics[width=.82\linewidth]{img/gen_sample.pdf}
+% 	  \includegraphics[clip,trim=73em 0em 5.5em 0em,
+% 	  width=.14\linewidth]{img/gen_supp.pdf}
+% 	  \caption{Adding streams to the stream database}
+% 	  \label{fig:gen_sample}
+% 	\end{subfigure}\\[1em]%
+% 	\begin{subfigure}{.63\textwidth}
+% 	  \centering
+% 	  \includegraphics[width=\linewidth]{img/gen_supp.pdf}
+% 	  \caption{Increasing the support threshold}
+% 	  \label{fig:gen_supp}
+% 	\end{subfigure}
+% 	\begin{subfigure}{.63\textwidth}
+% 	  \centering
+% 	  \includegraphics[width=\linewidth]{img/gen_sampsupp.pdf}
+% 	  \caption{Increasing sample size and the support threshold}
+% 	  \label{fig:gen_sampsupp}
+% 	\end{subfigure}
+% 	\caption{Relative time change of updated algorithm compared to baseline
+% 	for different stream databases while decreasing the search space.}
+% 	\label{fig:test}
+% 	\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth} % Left column
+        \centering
+        \vspace{0pt} % Force alignment at the top
+        \begin{subfigure}{\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{img/gen_sample.pdf}
+            % \includegraphics[clip,trim=73em 0em 5.5em 0em, width=.14\linewidth]{img/gen_supp.pdf}
+            \caption{Adding streams to the stream database}
+            \label{fig:gen_sample}
+        \end{subfigure}\\[1em]
+        \begin{subfigure}{\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{img/gen_supp.pdf}
+            \caption{Increasing the support threshold}
+            \label{fig:gen_supp}
+        \end{subfigure}
+        \begin{subfigure}{\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{img/gen_sampsupp.pdf}
+            \caption{Increasing sample size and the support threshold}
+            \label{fig:gen_sampsupp}
+        \end{subfigure}
+        \caption{Relative time change of updated algorithm compared to baseline for different stream databases while decreasing the search space.}
+        \label{fig:test}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth} % Right column
+        \centering
+        \vspace{0pt} % Force alignment at the top
+        \begin{subfigure}{\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{img/spec_sample.pdf}
+            % \includegraphics[clip,trim=76em 0em 5.5em 0em, width=.14\linewidth]{img/spec_supp.pdf}
+            \caption{Deleting streams to the stream database}
+            \label{fig:spec_samp}
+        \end{subfigure}\\[1em]
+        \begin{subfigure}{\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{img/spec_supp.pdf}
+            \caption{Decreasing support threshold}
+            \label{fig:spec_supp}
+        \end{subfigure}
+        \begin{subfigure}{\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{img/spec_sampsupp.pdf}
+            \caption{Decreasing sample size and support threshold}
+            \label{fig:spec_sampsupp}
+        \end{subfigure}
+        \caption{Relative time change of updated algorithm compared to baseline for different stream databases while increasing the search space.}
+        \label{fig:test2}
+    \end{minipage}
+\end{figure}
+
+
+
+% Next, we evaluated the behaviour of the algorithms when increasing the space
+% of candidate queries that need to be searched, by deleting streams from the
+% database and/or by decreasing the support threshold.
+Next, we evaluated the behaviour of the algorithms when increasing the space
+of candidate queries that need to be searched, by deleting streams from the
+database and/or by decreasing the support threshold.
+
+In \autoref{fig:spec_samp}, for each dataset, the
+incremental
+algorithm outperforms the baseline solution. For the google stream database
+G2, the
+incremental algorithm is twice as fast independently of the number of
+streams deleted
+from the original database. The highest benefit is observed for the google
+dataset G3,  where the updated algorithm is up to 50 times faster.
+
+In \autoref{fig:spec_supp}, we see that for decreasing support threshold for
+all datasets, the two algorithms need roughly the same
+runtime to discover the queries.
+This is because the original setting has a small set of matching queries. As
+a consequence, the benefit of the incremental discovery algorithms is also
+small, which yields a similar runtime as the baseline
+solution.
+
+Similarly, in the experiment shown in \autoref{fig:spec_sampsupp},
+where both the support threshold and the number of streams are decreased,
+the results follow the same trend. The small set of matching queries in the original
+setting limits the advantage of the incremental discovery algorithms, leading to comparable
+runtimes with the baseline approach.
+
+
+% \begin{figure}[t]
+% 	\centering
+% 	\begin{subfigure}{.63\textwidth}
+% 		\centering
+% 		\includegraphics[width=.82\linewidth]{img/spec_sample.pdf}
+% 		\includegraphics[clip,trim=76em 0em 5.5em 0em,
+% width=.14\linewidth]{img/spec_supp.pdf}
+% 		\caption{Deleting streams to the stream database}
+% 		\label{fig:spec_samp}
+% 	\end{subfigure}\\[1em]%
+% 	\begin{subfigure}{.63\textwidth}
+% 		\centering
+% 		\includegraphics[width=\linewidth]{img/spec_supp.pdf}
+% 		\caption{Decreasing support threshold}
+% 		\label{fig:spec_supp}
+% 	\end{subfigure}
+% 	\begin{subfigure}{.63\textwidth}
+% 		\centering
+% 		\includegraphics[width=\linewidth]{img/spec_sampsupp.pdf}
+% 		\caption{Decreasing sample size and support threshold}
+% 		\label{fig:spec_sampsupp}
+% 	\end{subfigure}
+% 	\caption{Relative time change of updated algorithm compared to baseline
+% 	for different stream databases while increasing the search space.}
+% 	\label{fig:test2}
+% 	\end{figure}

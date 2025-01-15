@@ -26,160 +26,160 @@ def main():
     file_path = f'{file_name}.csv'
     
     results = []
-    if not os.path.isfile(file_path):
-        repetition = 5
-        run = 0
-        for abstraction in ['F1', 'F2', 'F3', 'G1', 'G2', 'G3']:
-            
-            if abstraction[0] == 'F':
-                mod = 'finance'
-            else:
-                mod = 'google'
-            current_run = f'{mod}_{abstraction}'
-            if os.path.isfile(f'{result_path}/{current_run}.csv'):
-                current_df = pd.read_csv(f'{result_path}/{current_run}.csv',
-                                         header=0, index_col=0)
-                results.extend(current_df.values)
-                dataframe = pd.DataFrame(results, 
-                                    columns=current_df.columns) 
-            else:
-                if abstraction == 'F1':
-                    sample_path = 'datasets/finance_query1.txt.gz'
-                    trace_length = 50
-                    sample_size = 79
-                    max_query_length = -1
-                    supp1 = .95
-                    supp2 = .95
-
-
-                elif abstraction == 'F2':
-                    trace_length = 40
-                    sample_size = 1000
-                    max_query_length = -1
-                    sample_path = 'datasets/finance_query2.txt.gz'
-                    supp1 = .97
-                    supp2 = .97
-
-                elif abstraction == 'F3':
-                    trace_length = 25
-                    sample_size = 250
-                    max_query_length = -1
-                    sample_path = 'datasets/finance_query3.txt.gz'
-                    supp1 = .95
-                    supp2 = .95
-
-                elif abstraction == 'G1':
-                    trace_length = 7
-                    sample_size = 1000
-                    max_query_length = -1
-                    sample_path = 'datasets/google_query1_status1.txt.gz'
-                    supp1 = 1
-                    supp2 = 1
-
-                elif abstraction == 'G2':
-                    trace_length = 7
-                    sample_size = 1000
-                    max_query_length = 4
-                    sample_path = 'datasets/google_query2_status1.txt.gz'
-                    supp1 = 1
-                    supp2 = 1
-
-                elif abstraction == 'G3':
-                    trace_length = 7
-                    max_query_length = 4
-                    sample_size = 1000
-                    sample_path = 'datasets/google_query3.txt.gz'
-                    supp1 = 1
-                    supp2 = 1
-
-                sample_list = []
-
-                counter = 0
-                file = gzip.open(sample_path, 'rb')
-                for trace1 in file:
-                    if counter == sample_size:
-                        break
-
-                    if trace_length == -1:
-                        sample_list.append(' '.join(trace1.decode().split()))
-                    else:
-                        trace = ' '.join(trace1.decode().split()[-trace_length:])
-                        sample_list.append(trace)
-
-                    counter += 1
-                file.close()
-                j = abstraction
-                samples2_list = []
-                samples2_list.append(sample_list)
-                for i in range (1,11):
-                    samples2_list.append(sample_list[:-i])
-                
-                samples1 = [samples2_list[-1], samples2_list[0], samples2_list[0], samples2_list[0], 
-                            samples2_list[-1], samples2_list[0]]
-                samples2 = [samples2_list[:-1], samples2_list[1:], [samples2_list[0]], [samples2_list[0]],
-                            samples2_list[0:10:2], samples2_list[1:11:2]]
-                supports1 = [supp1, supp1, 0.75, 1, 0.75, 1]
-                supports2 = [[supp2], [supp2], [0.8, 0.85, 0.9, 0.95, 1], [0.75, 0.8, 0.85, 0.9, 0.95],
-                                                [0.8, 0.85, 0.9, 0.95, 1], [0.75, 0.8, 0.85, 0.9, 0.95]]
-                up_mode_list = ['gen', 'spec', 'gen', 'spec', 'gen', 'spec']
-                supp_sample = ['sample', 'sample', 'supp', 'supp', 'sampsupp', 'sampsupp']
-
-                for samp1, samp2, sp1, sp2, up_mode, spsamp in zip(samples1, samples2, supports1, 
-                                                                supports2, up_mode_list, supp_sample):
-                    
-                    file_path_result = f'{result_path}/{current_run}_{up_mode}_{spsamp}.csv'
-
-                    if os.path.isfile(file_path_result):
-                        current_df = pd.read_csv(file_path_result,
+    # if not os.path.isfile(file_path):
+    repetition = 5
+    run = 0
+    for abstraction in ['F1', 'F2', 'F3', 'G1', 'G2', 'G3']:
+        
+        if abstraction[0] == 'F':
+            mod = 'finance'
+        else:
+            mod = 'google'
+        current_run = f'{mod}_{abstraction}'
+        if os.path.isfile(f'{result_path}/{current_run}.csv'):
+            current_df = pd.read_csv(f'{result_path}/{current_run}.csv',
                                         header=0, index_col=0)
-                        results.extend(current_df.values)
-                        columns = current_df.columns
-                        dataframe = pd.DataFrame(results,
-                                    columns=columns)
-                    else:
-                        for _ in range(repetition):
-                            if spsamp == 'sampsupp':
-                                for sample2, support2 in zip(samp2, sp2[::-1]):
-                                    results, columns = match_algos(samp1, [sample2], 
-                                                        sp1, [support2], results, up_mode, mod,
-                                                        j, file_path, max_query_length=max_query_length)
+            results.extend(current_df.values)
+            dataframe = pd.DataFrame(results, 
+                                columns=current_df.columns) 
+        else:
+            if abstraction == 'F1':
+                sample_path = 'datasets/finance_query1.txt.gz'
+                trace_length = 50
+                sample_size = 79
+                max_query_length = -1
+                supp1 = .95
+                supp2 = .95
 
-                            else:
-                                results, columns = match_algos(samp1, samp2, 
-                                                        sp1, sp2, results, up_mode, mod,
-                                                        j, file_path, max_query_length=max_query_length)
-                        dataframe = pd.DataFrame(results, columns=columns)
-                        if len(samp2) !=1:
-                            if len(sp2) == 1:
 
-                                current_df = dataframe.loc[(dataframe['mode'] == abstraction) &
-                                                    (dataframe['iteration'] == up_mode) &
-                                                    (dataframe['support 1']== dataframe['support 2'] )]
-                            else:
-                                current_df = dataframe.loc[(dataframe['mode'] == abstraction) &
-                                                    (dataframe['iteration'] == up_mode) &
-                                                    (dataframe['support 1'] != dataframe['support 2'] ) &
-                                                    (dataframe['sample size 1'] != dataframe['sample size 2'] )]
+            elif abstraction == 'F2':
+                trace_length = 40
+                sample_size = 1000
+                max_query_length = -1
+                sample_path = 'datasets/finance_query2.txt.gz'
+                supp1 = .97
+                supp2 = .97
+
+            elif abstraction == 'F3':
+                trace_length = 25
+                sample_size = 250
+                max_query_length = -1
+                sample_path = 'datasets/finance_query3.txt.gz'
+                supp1 = .95
+                supp2 = .95
+
+            elif abstraction == 'G1':
+                trace_length = 7
+                sample_size = 1000
+                max_query_length = -1
+                sample_path = 'datasets/google_query1_status1.txt.gz'
+                supp1 = 1
+                supp2 = 1
+
+            elif abstraction == 'G2':
+                trace_length = 7
+                sample_size = 1000
+                max_query_length = 4
+                sample_path = 'datasets/google_query2_status1.txt.gz'
+                supp1 = 1
+                supp2 = 1
+
+            elif abstraction == 'G3':
+                trace_length = 7
+                max_query_length = 4
+                sample_size = 1000
+                sample_path = 'datasets/google_query3.txt.gz'
+                supp1 = 1
+                supp2 = 1
+
+            sample_list = []
+
+            counter = 0
+            file = gzip.open(sample_path, 'rb')
+            for trace1 in file:
+                if counter == sample_size:
+                    break
+
+                if trace_length == -1:
+                    sample_list.append(' '.join(trace1.decode().split()))
+                else:
+                    trace = ' '.join(trace1.decode().split()[-trace_length:])
+                    sample_list.append(trace)
+
+                counter += 1
+            file.close()
+            j = abstraction
+            samples2_list = []
+            samples2_list.append(sample_list)
+            for i in range (1,11):
+                samples2_list.append(sample_list[:-i])
+            
+            samples1 = [samples2_list[-1], samples2_list[0], samples2_list[0], samples2_list[0], 
+                        samples2_list[-1], samples2_list[0]]
+            samples2 = [samples2_list[:-1], samples2_list[1:], [samples2_list[0]], [samples2_list[0]],
+                        samples2_list[0:10:2], samples2_list[1:11:2]]
+            supports1 = [supp1, supp1, 0.75, 1, 0.75, 1]
+            supports2 = [[supp2], [supp2], [0.8, 0.85, 0.9, 0.95, 1], [0.75, 0.8, 0.85, 0.9, 0.95],
+                                            [0.8, 0.85, 0.9, 0.95, 1], [0.75, 0.8, 0.85, 0.9, 0.95]]
+            up_mode_list = ['gen', 'spec', 'gen', 'spec', 'gen', 'spec']
+            supp_sample = ['sample', 'sample', 'supp', 'supp', 'sampsupp', 'sampsupp']
+
+            for samp1, samp2, sp1, sp2, up_mode, spsamp in zip(samples1, samples2, supports1, 
+                                                            supports2, up_mode_list, supp_sample):
+                
+                file_path_result = f'{result_path}/{current_run}_{up_mode}_{spsamp}.csv'
+
+                if os.path.isfile(file_path_result):
+                    current_df = pd.read_csv(file_path_result,
+                                    header=0, index_col=0)
+                    results.extend(current_df.values)
+                    columns = current_df.columns
+                    dataframe = pd.DataFrame(results,
+                                columns=columns)
+                else:
+                    for _ in range(repetition):
+                        if spsamp == 'sampsupp':
+                            for sample2, support2 in zip(samp2, sp2[::-1]):
+                                results, columns = match_algos(samp1, [sample2], 
+                                                    sp1, [support2], results, up_mode, mod,
+                                                    j, file_path, max_query_length=max_query_length)
 
                         else:
-                            current_df = dataframe.loc[(dataframe['mode'] == abstraction) &
-                                                    (dataframe['iteration'] == up_mode) &
-                                                    (dataframe['support 1']!= dataframe['support 2'] )]
-                        current_df.to_csv(file_path_result)
+                            results, columns = match_algos(samp1, samp2, 
+                                                    sp1, sp2, results, up_mode, mod,
+                                                    j, file_path, max_query_length=max_query_length)
+                    dataframe = pd.DataFrame(results, columns=columns)
+                    if len(samp2) !=1:
+                        if len(sp2) == 1:
 
-                    run += 1
-                dataframe = pd.DataFrame(results, columns=columns)
-                current_df = dataframe.loc[(dataframe['mode'] == abstraction)]
-                current_df.to_csv(f'{result_path}/{current_run}.csv')
-                
-        if os.path.isfile(file_path):
-            dataframe = pd.read_csv(file_path)
-        else:
-            columns = current_df.columns.values[1:]
+                            current_df = dataframe.loc[(dataframe['mode'] == abstraction) &
+                                                (dataframe['iteration'] == up_mode) &
+                                                (dataframe['support 1']== dataframe['support 2'] )]
+                        else:
+                            current_df = dataframe.loc[(dataframe['mode'] == abstraction) &
+                                                (dataframe['iteration'] == up_mode) &
+                                                (dataframe['support 1'] != dataframe['support 2'] ) &
+                                                (dataframe['sample size 1'] != dataframe['sample size 2'] )]
+
+                    else:
+                        current_df = dataframe.loc[(dataframe['mode'] == abstraction) &
+                                                (dataframe['iteration'] == up_mode) &
+                                                (dataframe['support 1']!= dataframe['support 2'] )]
+                    current_df.to_csv(file_path_result)
+
+                run += 1
             dataframe = pd.DataFrame(results, columns=columns)
-            dataframe.to_csv(file_path)
-    else:
+            current_df = dataframe.loc[(dataframe['mode'] == abstraction)]
+            current_df.to_csv(f'{result_path}/{current_run}.csv')
+            
+    if os.path.isfile(file_path):
         dataframe = pd.read_csv(file_path)
+    else:
+        columns = current_df.columns.values[1:]
+        dataframe = pd.DataFrame(results, columns=columns)
+        dataframe.to_csv(file_path)
+    # else:
+    #     dataframe = pd.read_csv(file_path)
     create_plots(dataframe)
     return dataframe
 
@@ -378,7 +378,7 @@ def create_plots(dataframe:pd.DataFrame):
     plot_path ='experiments/plots'
     if not os.path.exists(plot_path):
         os.makedirs(plot_path)
-    grid.savefig('experiments/plots/gen_sample.pdf')
+    grid.savefig('experiments/results/gen_sample.pdf')
 
     results = []
     for mode in df_gen_supp['mode'].unique():
@@ -409,7 +409,7 @@ def create_plots(dataframe:pd.DataFrame):
     grid = sns.relplot(data=df_plot, x='New support', y='Rel timechange', hue='Abstraction',
                        col='Dataset', kind='line', style='Abstraction', markers=True)
     grid.set(yscale='log', yticks= [1,10,100], xticks=[0.8, 0.9, 1.0])
-    grid.savefig('experiments/plots/gen_supp.pdf')
+    grid.savefig('experiments/results/gen_supp.pdf')
 
     results = []
     for mode in df_spec_sample['mode'].unique():
@@ -440,7 +440,7 @@ def create_plots(dataframe:pd.DataFrame):
     grid = sns.relplot(data=df_plot, x='# Deleted streams', y='Rel timechange', hue='Abstraction',
                        col='Dataset', kind='line', style='Abstraction', markers=True, legend=True)
     grid.set(yscale='log', yticks= [1,10,100], xticks=[5,10])
-    grid.savefig('experiments/plots/spec_sample.pdf')
+    grid.savefig('experiments/results/spec_sample.pdf')
 
     results = []
     for mode in df_spec_supp['mode'].unique():
@@ -470,7 +470,7 @@ def create_plots(dataframe:pd.DataFrame):
     grid = sns.relplot(data=df_plot, x='New support', y='Rel timechange', hue='Abstraction',
                        col='Dataset', kind='line', style='Abstraction', markers=True)
     grid.set(yscale='log', yticks= [1,10], xticks=[0.75, 0.85, .95])
-    grid.savefig('experiments/plots/spec_supp.pdf')
+    grid.savefig('experiments/results/spec_supp.pdf')
 
     results = []
     for mode in df_spec_sampsupp['mode'].unique():
@@ -515,7 +515,7 @@ def create_plots(dataframe:pd.DataFrame):
     grid = sns.relplot(data=df_plot, x='New support', y='Rel timechange', hue='Abstraction',
                        col='Dataset', kind='line', style='Abstraction', markers=True, legend=True)
     grid.set(yscale='log', yticks= [1,10,100], xticks=[0.8, 0.9, 1.0])
-    grid.savefig('experiments/plots/spec_sampsupp.pdf')
+    grid.savefig('experiments/results/spec_sampsupp.pdf')
 
 
     results = []
@@ -547,7 +547,7 @@ def create_plots(dataframe:pd.DataFrame):
     grid = sns.relplot(data=df_plot, x='New support', y='Rel timechange', hue='Abstraction',
                        col='Dataset', kind='line', style='Abstraction', markers=True)
     grid.set(yscale='log', yticks= [1,10,100], xticks=[0.8, 0.9, 1.0])
-    grid.savefig('experiments/plots/gen_sampsupp.pdf')
+    grid.savefig('experiments/results/gen_sampsupp.pdf')
 
 if __name__ == "__main__":
     main()

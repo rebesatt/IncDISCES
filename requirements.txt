@@ -1,0 +1,7 @@
+requests
+pandas
+numpy
+matplotlib
+seaborn
+jinja2
+typing_extensions

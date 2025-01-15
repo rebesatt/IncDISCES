@@ -1,0 +1,691 @@
+\section{Analysis of the Problem Context}
+\label{sec:updates}
+% Updating a stream database involves the following two operations: deleting a stream and inserting a stream. The following section describes in detail for each operation which
+% information needs to be updated in the new set of descriptive queries.
+
+In this section, we study the problem of event
+query discovery under updates, focusing especially on
+the relation of the sets of matching queries before
+and after an update. We first characterize the problem
+context. Let $D_0=\{S_1,\ldots, S_d\}$ be a stream
+database,
+$\theta_0$ be a support threshold, and
+$Q_{D_0}^{\theta_0}$ be a matching query set. For this
+setting, we distinguish two possible updates, as
+follows, which may also be combined:
+\begin{itemize}[nosep,left=.2em .. 1.5em]
+  \item The stream database $D_0$ is updated resulting
+  in a new database $D_1$. Here, we consider the
+  addition of $k$ new
+  streams, i.e., $D_1 = D_0 \cup \{S_{d+1}, \dots,
+  S_{d+k}\}$, as well as the removal of $k$ existing
+  streams, i.e., $D_1 = D_0 \setminus D^-$ with $D^-
+  \subseteq D_0$ and $|D^-|=k$.
+  \item The support threshold $\theta_0$ is updated
+  resulting in a new threshold $\theta_1 \in (0,1]$.
+%  \item Both, the stream database $D_0$ and the
+%  support threshold $\theta_0$ are updated.
+\end{itemize}
+These updates potentially have implications for the
+set of matching queries, $Q_{D_0}^{\theta_0}$, which,
+hence, needs to be updated to $Q_{D_0}^{\theta_1}$,
+$Q_{D_1}^{\theta_0}$, or $Q_{D_1}^{\theta_1}$,
+respectively. Specifically, we seek to
+answer the following questions:
+\begin{enumerate}[nosep,left=.2em .. 1.5em]
+  \item Which queries are still matching? That is,
+  which queries $q\in Q_{D_0}^{\theta_0}$ do still belong to
+  $Q_{D_0}^{\theta_1}$,
+  $Q_{D_1}^{\theta_0}$, or $Q_{D_1}^{\theta_1}$,
+  respectively?
+  \item Which new queries are matching? That is,
+    which queries $q\notin Q_{D_0}^{\theta_0}$ belong to
+    $Q_{D_0}^{\theta_1}$,
+    $Q_{D_1}^{\theta_0}$, or $Q_{D_1}^{\theta_1}$,
+    respectively?
+\end{enumerate}
+
+
+%\begin{problem}[Event Query Discovery with Updates]
+%  \label{problem-updates}
+%    Given a stream database $D_0=\{S_1,\ldots,
+%S_n\}$, a support threshold $\theta_1$,
+%    and a query set $Q_{D_0}^{\theta_0}$, and an
+%updated discovery problem.
+%    The possible updates include:
+%    \begin{itemize}[nosep,left=1em]
+%      \item The stream database $D_0$ is updated with
+%$k$ new
+%      streams $\{S_{d+1}, \dots, S_{d+k}\}$
+%      or $k$ existing streams are removed.
+%      \item The support threshold $\theta_0$ is
+%updated.
+%      \item Both the stream database $D_0$ and the
+%support threshold $\theta_0$ are updated.
+%    \end{itemize}
+%    The goal is to update the query set
+%$Q_{D_0}^{\theta_0}$ to reflect the changes
+%    in the stream database $D_0$ and the support
+%threshold $\theta_0$.
+%    \begin{enumerate}[nosep,left=1em]
+%      \item Which queries in $Q_{D_0}^{\theta_0}$ are
+%still correct?
+%      \item Which new queries are correct?
+%      \item Which information can be derived from the
+%previous query discovery?
+%      \item How can the query set
+%$Q_{D_1}^{\theta_1}$
+%      be updated efficiently?
+%      \item Is it always feasible to update the query
+%      set $Q_{D_1}^{\theta_1}$ incrementally
+%      or are we faster by simply running the query
+%      discovery on the new setting?
+%    \end{enumerate}
+%  \end{problem}
+
+%In this section we want to give an answer to the
+%question 1-3. Question 4 will
+%be answered in \autoref{sec:algos} where we present
+%our algorithms.
+%Finally, in \autoref{sec:evaluation} we give an
+%answer to question 5 comparing
+%the runtimes from a baseline event query discovery
+%implementation to our
+%algorithms that take into account previous
+%information.
+
+%\subsection{Relations between Matching Query Sets}
+Ideally, the above questions shall be answered
+incrementally. That is, we would like to avoid
+computing $Q_{D_0}^{\theta_1}$,
+$Q_{D_1}^{\theta_0}$, or $Q_{D_1}^{\theta_1}$ from
+scratch, but rather derive it directly from
+$Q_{D_0}^{\theta_0}$.
+
+Before turning to algorithmic solutions to the above
+questions, we study the three relations between the
+matching query sets as
+illustrated in \autoref{fig:matching_sets}.
+
+\begin{figure}[h]
+  %\begin{center}
+\centering
+\begin{tikzpicture}[scale=2]
+    \def\is{1.0} % inner seperation of nodes
+
+    % GROUPS
+    \node[inner sep=\is] (Q00) at (0,0) {$Q_{D_0}^{\theta_0}$};
+    \node[inner sep=\is] (Q01) at (0,1) {$Q_{D_0}^{\theta_1}$}; % SO+(1,3)
+    \node[inner sep=\is] (Q10) at (1,0) {$Q_{D_1}^{\theta_0}$};
+    \node[inner sep=\is] (Q11) at (1,1) {$Q_{D_1}^{\theta_1}$};
+
+
+    % ARROWS
+    \draw[<->,thick,myblue] (Q00) -- (Q01)
+      node[midway,right=-.65,scale=1.1] {(a)}
+      ;
+    \draw[<->,thick,myyellow,dotted] (Q00) -- (Q10)
+      node[midway,above=-.5,scale=1.1] {(b)}
+      ;
+    \draw[<->,thick,myblue] (Q10) -- (Q11)
+      node[midway,left=-.65,scale=1.1] {(a)}
+      ;
+    \draw[<->,thick,myyellow, dotted] (Q01) -- (Q11)
+      node[midway,below=-.5,scale=1.1] {(b)}
+      ;
+    \draw[<->,thick,mymagenta, dashdotted] (Q00) -- (Q11)
+      node[pos=.75,above =-.75,scale=1.1, rotate=45]
+        {(c)}
+      ;
+  \end{tikzpicture}
+  \caption{Illustration of matching query sets and the
+  relations between them.}
+  \label{fig:matching_sets}
+%\end{center}
+\end{figure}
+
+In this paper, we focus on the case that $D_1$ is derived from
+$D_0$
+by the addition of $k$ streams, i.e., $D_1=D_0 \cup
+\{S_{d+1}, \dots, S_{d+k}\}$, and that the support
+threshold is strengthened, i.e., $0 < \theta_0 \leq
+\theta_1 \leq 1$. The reason being that the properties
+discussed below hold analogously for the mirrored
+updates, i.e., the deletion of existing streams and a
+relaxed support threshold.
+In the remainder, we first study the relation of the
+sets of matching queries
+when only the support threshold is updated (a), and
+when only the stream database is updated (b).
+Afterwards, we turn to the case that both are updated
+at the same time (c).
+
+
+%\textbf{Remark.} Here we only proof the cases that
+%streams are added to the
+%stream database and the support threshold is
+%increased. But the
+%porperties hold analogously for the reverted
+%scenarios, that is deleting
+%streams from the stream database and decreasing the
+%support threshold.
+
+%Let $D_0=[S_1,\dots,S_n]$ be a stream database and
+%let $D_1$ be an updated stream database
+%with $D_1=D_0 \cup \{S_{d+1}, \dots, S_{d+k}\}$.
+%    Let the support thresholds $\theta_0, \theta_1$
+%be fixed and $0 < \theta_0 \leq \theta_1 \leq 1$ and
+%    let $s(|D_0|,\theta_0),s(|D_1|,\theta_1)$ be the
+%stream thresholds for $D_0$ and $D_1$, respectively.
+%    Let $Q_{D_0}^{\theta_0}$ be the set of matching
+%queries for $D_0$ and $\theta_0$ and
+%$Q_{D_1}^{\theta_1}$
+%    be the set of matching queries for $D_1$ with
+%$\theta_1$.
+
+%In \autoref{fig:matching_sets} we have illustrated
+%the matching query sets for the
+%old and the updated discovery problem.
+
+\subsection*{(a): Updating only the Support Threshold}
+
+In case only the support threshold is changed, i.e.,
+it is strengthened, we note that there exists a
+containment relation between the sets of matching
+queries. Based on \autoref{prop:subset}, we conclude
+that the set
+of matching queries for the increased support
+threshold is a
+subset of the one for the lower support threshold, i.e.,
+$Q_{D_i}^{\theta_1} \subseteq Q_{D_i}^{\theta_0}$, $i\in \{0,1\}$.
+%and $Q_{D_1}^{\theta_1} \subseteq Q_{D_1}^{\theta_0}$.
+
+\subsection*{(b): Updating only the Stream Database}
+\label{subsubsec:stream_update}
+% \todo[inline]{RS: Add proof for lower bound to better explain the visualization at the end of Section 3b.}
+Regarding updates of the stream database, i.e., the
+addition of streams, we make the
+following observation based on the stream
+thresholds, i.e., the minimal numbers of streams that
+need to match to fulfill the support threshold.
+Consider the case that $s(|D_1|,\theta_i) =
+s(|D_0|,\theta_i) + k$, $i\in \{0,1\}$, where
+$k$ represents the number of added streams.
+Intuitively, this means that
+\emph{all} newly added streams need to be matched for
+a query to remain in the set of matching queries,
+under a worst-case assumption. That is, all queries
+that \emph{only} match the minimal numbers of streams
+to fulfill the support threshold need to match all the
+new streams. We note though that, with a support
+threshold of $\theta_i=1$, this worst case applies to
+all queries in the set of matching queries.
+If $s(|D_1|,\theta_i) =
+s(|D_0|,\theta_i) + k$, then the set of
+matching queries for
+the updated stream database can only become smaller,
+i.e., it is
+a subset of the original set. This observation on a
+containment relation between the matching sets of
+queries under updates to the stream database is
+captured by the following property:
+%$Q_{D_1}^{\theta_0}
+%\subseteq Q_{D_0}^{\theta_0}$.
+%Analogously, we consider the case that
+%$s(n+1,\theta_i)
+%= s(n,\theta_i)$, $i\in \{0,1\}$, i.e., not even \emph{one} of the newly
+%added streams need to be matched for a query to remain in the set of
+%matching queries, the
+%respective containment relation holds true:
+%$Q_{D_1}^{\theta_1} \subseteq Q_{D_0}^{\theta_1}$.
+%This can be summarized in the property:
+\begin{property}
+\label{prop:db_change_inclusion}
+$s(|D_1|,\theta_i) = s(|D_0|,\theta_i) + k, i\in\{0,1\} \implies $
+$Q_{D_1}^{\theta_i} \subseteq Q_{D_0}^{\theta_i}$.
+\end{property}
+The proof of this property is directly covered by \autoref{lemma:update},
+which captures a more general case as detailed below. For now, we illustrate
+what happens if the respective relation between the stream thresholds does
+not hold true with an example.
+
+Consider the streams $S_1, S_2, S_3$, as given in
+\autoref{tab:example_stream_database}.
+Let $D_0=\{S_1,S_2\}$ be the initial stream database and let the support
+threshold be $\theta_0 = 0.6$. Then, the stream threshold is
+$s(D_0,\theta_0) = 2$, i.e., a query needs to match both streams to be
+frequent. Now, let $D_1=\{S_1,S_2,S_3\}$ be the stream database after adding
+one stream, $S_3$, while leaving the support threshold unchanged. Then, the
+stream threshold is still $s(D_1,\theta_0) = 2$ and, hence,
+$s(D_1,\theta_0)\neq s(D_0,\theta_0) +k$ as $k=1$ in our example.
+
+As mentioned above, the query $q = \langle
+(x_0,\text{schedule},\text{low}),(\_,\text{schedule},\_),(x_0,\text{evict},\text{low})
+\rangle$ matches $S_2$ and $S_3$, but not $S_1$.
+This means that $q \in Q_{D_1}^{\theta_1}$ and $q \notin
+Q_{D_0}^{\theta_1}$. As such, query $q$ illustrates that the containment
+relation between the sets of matching queries does not hold and we conclude
+that, if $s(D_1,\theta_0)\neq s(D_0,\theta_0) +k$, then the relation between
+$Q_{D_1}^{\theta_1}$ and $Q_{D_0}^{\theta_1}$ depends on the added stream(s).
+
+
+%What happens if $s_1\neq s_0 +k$?
+%
+%  Let $D_1=[S_1,S_2]$ be the stream database with the support threshold
+%  $\theta_0 = 0.6$ and the stream threshold $s_0 = 2$.
+%Furthermore, let $D_2=[S_1,S_2,S_3]$ be the neighboring stream database
+%with
+%the same support threshold and
+%the stream threshold $s_1 = 2$.
+
+
+%The following query $q = \langle
+%(x_0,\text{schedule},\text{low}),(\_,\text{schedule},\_),(x_0,\text{evict},\text{low})
+% \rangle$ matches $S_2$ and $S_3$, but not $S_1$.
+%This means that $q \in P_{D_2}^{\theta_1}$ and $q \notin
+%P_{D_1}^{\theta_1}$.
+%
+%Conclusion: If $s_1\neq s_0+k$, the relation of the two matching query sets
+%depends on the added streams.
+
+%\exampleboxh{Example 1}{
+%What happens if $s_1\neq s_0 +k$?\\
+%\label{ex1}
+%Consider the following three streams
+%$S_1, S_2, S_3$:
+%
+%	\begin{center}
+%	\medskip
+%	{\footnotesize
+%		\begin{tabular}{l lrrr}
+%			\toprule
+%			Stream & Event &  Job Id  &  Status  &  Priority\\
+%			\midrule
+%			$S_1$ & $e_{11}$   & \textbf{\color{cyan}1} &
+%\textbf{\color{cyan}schedule} & \textbf{\color{cyan}low}  \\
+%			 & $e_{12}$   & 1 & kill & low  \\
+%			 & $e_{13}$   & 1 & \textbf{\color{cyan}schedule} & high  \\
+%			 & $e_{14}$   & \textbf{\color{cyan}1} &
+%\textbf{\color{red}finish} & \textbf{\color{red}high}  \\
+%			\midrule
+%			$S_2$ & $e_{21}$   & \textbf{\color{cyan}2} &
+%\textbf{\color{cyan}schedule} & \textbf{\color{cyan}low}  \\
+%			 & $e_{22}$   & 3 & \textbf{\color{cyan}schedule} & high  \\
+%			 & $e_{23}$   & \textbf{\color{cyan}2} &
+%\textbf{\color{cyan}evict} & \textbf{\color{cyan}low} \\
+%			\midrule
+%			$S_3$ & $e_{31}$   & 4 & schedule & high  \\
+%			 & $e_{32}$   & \textbf{\color{cyan}5} &
+%\textbf{\color{cyan}schedule} & \textbf{\color{cyan}low}  \\
+%			 & $e_{33}$   & 4 & finish & high  \\
+%			 & $e_{34}$   & 6 & \textbf{\color{cyan}schedule} & low  \\
+%			 & $e_{35}$   & \textbf{\color{cyan}5} &
+%\textbf{\color{cyan}evict} & \textbf{\color{cyan}low}\\
+%			\bottomrule
+%	\end{tabular}}
+%	\end{center}
+%
+%	\medskip
+%  Let $D_1=[S_1,S_2]$ be the stream database with the support threshold
+%$\theta_0 = 0.6$ and the stream threshold $s_0 = 2$.
+%  Furthermore, let $D_2=[S_1,S_2,S_3]$ be the neighboring stream database
+%with the same support threshold and
+%  the stream threshold $s_1 = 2$.
+%
+%
+% The following query $q = \langle
+%
+%(x_0,\text{schedule},\text{low}),(\_,\text{schedule},\_),(x_0,\text{evict},\text{low})
+% \rangle$ matches $S_2$ and $S_3$, but not $S_1$.
+% This means that $q \in P_{D_2}^{\theta_1}$ and $q \notin
+%P_{D_1}^{\theta_1}$.
+%
+%Conclusion: If $s_1\neq s_0+k$, the relation of the two matching query sets
+%depends on the added streams.
+%}
+
+
+The above property and our example illustrate that there is a close relation
+between the amount of change applied to a stream database, i.e., the number
+$k$ of added streams, the stream threshold, and the support threshold. In
+fact, the support threshold can be bounded based on the other two
+parameters. These bounds, in turn, enable us to derive insights on how
+often we can expect \autoref{prop:db_change_inclusion} to be applicable and,
+thereby, conclude that the set of matching queries of the updated database
+is a subset of the original set of matching queries.
+
+As above, let $D_0=\{S_1,\dots,S_d\}$ and $D_1=D_0 \cup \{S_{d+1}, \dots,
+S_{d+k}\}$ be the original and updated databases and let $\theta_0$ be the
+support
+threshold for both of them. To simplify the presentation, we use the
+short-hands $s_0 = s(|D_0|,\theta_0)$ and $s_1=s(|D_1|,\theta_0)$ for the
+stream thresholds $D_0$ and $D_1$, respectively.
+Then, it holds that:
+$$
+s_1 = \lceil (d+k) \cdot \theta_0 \rceil \leq \lceil d \cdot \theta_0 \rceil
++ \lceil k \cdot \theta_0 \rceil \leq \lceil d \cdot \theta_0 \rceil + k =
+s_0 + k.
+$$
+Based thereon, and considering the fact
+that $s_0 \leq s_1 \leq s_0+k$, we conclude that $s_1 \in \{s_0,\dots, s_0
++k\}$.
+
+Moreover, knowing that $s_0-1 < \theta_0 \cdot d \leq s_0$, we derive the
+following bounds for the support threshold based on the stream threshold
+$s_0$ of $D_0$:
+$$
+\frac{s_0-1}{d} < \theta_0 \leq \frac{s_0}{d}.
+$$
+Analogously, we derive bounds for the support threshold $\theta_0$ based on
+the stream threshold $s_1$ of the updated database $D_1$:
+$$
+\frac{s_1-1}{d+k} < \theta_0 \leq \frac{s_1}{d+k}.
+$$
+Combining the above statements, we derive bounds for the support threshold
+based on the stream threshold of the original database. However,
+we need to distinguish two cases, i.e., $s_1 = s_0+k$, which means that all
+added streams need to be matched for a query to remain
+frequent under the worst-case assumption that it only
+matches exactly $s_0$ streams; and $s_1 <
+s_0 +k$, which means that only some of the new streams
+need to be matched for any query to remain frequent:
+\begin{property}
+\label{prop:db_change_bounds}
+$s_1 < s_0 +k \implies \frac{s_0-1}{d} < \theta_0 \leq \frac{s_0+k-1}{d+k}$
+and $s_1 = s_0+ k \implies \frac{s_0+k-1}{d+k} < \theta_0 \leq
+\frac{s_0}{d}.$
+\end{property}
+
+% \begin{table}[h!]
+%   \centering
+%   \begin{tabular}{@{}lllllllll@{}}
+%   \toprule
+%            & \multicolumn{2}{l}{$s_1$:} & \multicolumn{2}{l}{$s_2$:} & \multicolumn{2}{l}{$s_2=s_1$} & \multicolumn{2}{l}{$s_2=s_1+1$} \\ \midrule
+%   $s$/$s_2$ & low         & up         & low         & up          & low          & up          & low          & up            \\
+%   1        & 0           & 0.25       & 0           & 0.2         & 0            & 0.2         & 0.2          & 0.25          \\
+%   2        & 0.25        & 0.5        & 0.2         & 0.4         & 0.25         & 0.4         & 0.4          & 0.5           \\
+%   3        & 0.5         & 0.75       & 0.4         & 0.6         & 0.5          & 0.6         & 0.6          & 0.75          \\
+%   4        & 0.75        & 1          & 0.6         & 0.8         & 0.75         & 0.8         & 0.8          & 1             \\
+%            &             &            & 0.8         & 1           &              &             &              &               \\ \bottomrule
+%   \end{tabular}
+%   \caption{The lower and upper bounds for the support threshold $\theta_1$ in relation to the stream threshold $s_1$ and $s_2$ for $n=4$.}
+%   \label{tab:bounds}
+%   \end{table}
+
+% In \autoref{tab:bounds} we have illustrated the bounds for the support threshold $\theta_1$ in relation to
+% the stream threshold $s_1$ and $s_2$ for $n=4$.
+
+% The probability that for a given stream database $D_1$ with $|D_1| = n$ and a given
+% stream threshold $s_1$ it holds that $s_2 = s_1$ can be calculated as follows:
+% $$
+% \mathbb{P}[s_2 = s_1 |n,s_1] = \frac{s_1}{n+1} - \frac{s_1-1}{n} = \frac{1}{n} - \frac{s_1}{n(n+1)}.
+% $$
+% And over all possible stream thresholds $s_1$ we obtain:
+% % $$
+% % P(s_2 = s |n) = \sum_{s=1}^{n} P(s_2 = s |n,s) = \sum_{s=1}^{n} \left( \frac{1}{n} - \frac{s}{n(n+1)} \right) =
+% % 1 - \frac{1}{n(n+1)} \sum_{s=1}^{n} s = 1 - \frac{1}{n(n+1)} \frac{n(n+1)}{2} = \frac{1}{2}.
+% % $$
+
+% \begin{align*}
+%     \mathbb{P}[s_2 = s_1 |n] = \sum_{s=1}^{n} \mathbb{P}[s_2 = s_1 |n,s_1] &= \sum_{s_1=1}^{n} \left( \frac{1}{n} - \frac{s_1}{n(n+1)} \right) \\
+%     &= 1 - \frac{1}{n(n+1)} \sum_{s_1=1}^{n} s_1 \\
+%     &= 1 - \frac{1}{n(n+1)} \frac{n(n+1)}{2} = \frac{1}{2}.
+% \end{align*}
+
+% In other words, the probability that the stream threshold $s_2$ is equal to the stream threshold $s_1$ is $\frac{1}{2}$.
+% This also means that the probability that the stream threshold $s_2$ is equal to the stream threshold $s_1+1$ is $\frac{1}{2}$.
+
+The bounds as stated in \autoref{prop:db_change_bounds} are useful to derive
+insights in the applicability of
+\autoref{prop:db_change_inclusion}, i.e., they enable
+us to understand when $s_1=s_0+k$ holds after $k$ streams
+have been added to a stream database. Intuitively, the
+bounds on $\theta_0$ characterize the change points
+for the stream threshold, depending on the size of a
+stream database $d$ and the size of the change $k$.
+We visualize the change points as determined by
+\autoref{prop:db_change_bounds} in
+\autoref{fig:thresholds}. Here, we consider databases
+of different sizes, $d\in \{10,50,100,500,1000\}$, to
+which changes of size $k\in \{1,2,5\}$ are applied.
+The orange ranges characterize the intervals of the
+support threshold $\theta_0$ for which it holds that
+$s_1 = s_0+k$, i.e., for which we know that the set of
+matching queries after the change is a subset of the
+original set of matching queries.
+The lower bound of the orange range is determined by
+the size of the database and the size of the change,
+and can be derived from \autoref{prop:db_change_bounds} as follows:
+$$
+\frac{s_0}{d}> \frac{s_0+k-1}{d+k} \implies \frac{s_0}{d}>\frac{k-1}{k} \implies \theta_0>\frac{k-1}{k}.
+$$
+From the visualization, we draw two main conclusions:
+\begin{itemize}[nosep,left=.2em .. 1.5em]
+  \item The higher the support threshold, the more
+  likely
+  it is that \autoref{prop:db_change_inclusion} is
+  applicable, so that the containment relation between
+  the sets of matching queries holds true.
+  \item The
+  larger the size of the change, the less likely the
+  property is applicable.
+\end{itemize}
+
+
+
+
+
+%based on the size of the database, make an estimation
+%änderung des stream thresholds in abhängigkeit von
+%datenbankgröße und support value
+%applicability: wann ist
+%abhängig vom support und vom verhältnis der größe
+%Bounds auf theta erlauben Rückschlüsse für welche
+%theta man eine änderung in dem stream threshold hat
+%gegeben datenbankgröße, gegeben ein k
+%Daraus folgt die Anwendbarkeit von Property 2
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=.75\textwidth]{img/support_distribution_all.pdf}
+  \caption{Visualization of the change points for the
+  stream threshold in relation to the support
+  threshold, for different scenarios of database sizes
+  and change sizes.}
+  \label{fig:thresholds}
+\end{figure}
+
+
+
+% But the probability distribution of the support threshold $\theta_1$ in relation to the stream threshold $s_1$ is not uniform.
+
+
+% There is a clear trend that the higher the support threshold $\theta_1$
+% the more likely it is to fulfill the condition $s_2 = s_1+1$.
+% Let_2s consider the case $s_2 = s$.
+% Then it holds:
+% $$
+% \lceil (n+1) \cdot \theta_1 \rceil < \lceil n \cdot \theta_1 \rceil + 1.
+% $$
+% From this we can deduce that $n \cdot \theta_1 + \theta_1 \leq s$.
+% Therefore, $\theta_1 \leq \frac{s}{n+1}$.
+% Analogously, we obtain for the case $s_2 = s+1$: $\theta_1 > \frac{s}{n+1}$.
+
+
+
+% Then
+% \begin{align*}
+%     \theta_1 &\leq \frac{\lceil n \cdot \theta_1 \rceil}{n+1} \\
+%     (n+1) \cdot \theta_1 &\leq \lceil n \cdot \theta_1 \rceil\\
+%     \theta_1 \cdot n + \theta_1 &\leq \lceil n \cdot \theta_1 \rceil \\
+%     \theta_1 &\leq \lceil n \cdot \theta_1 \rceil - n \cdot \theta_1.
+% \end{align*}
+% $$
+% \theta_1 \leq \frac{\lceil n \cdot \theta_1 \rceil}{n+1} = \frac{\lceil n \cdot \theta_1 \rceil + n \cdot \theta_1 - n \cdot \theta_1 }{n+1} .
+% $$
+
+% \begin{wrapfigure}{r}{0.25\textwidth}
+%     \centering
+%     \includegraphics[width=0.5\textwidth]{img/support_distribution.pdf}
+%     \caption{The support threshold $\theta_1$ in relation to the stream threshold $s$ for $n=4$.}
+%     \label{fig:thresholds}
+% \end{wrapfigure}
+
+
+
+\subsection*{(c): Updating both, the Stream Database
+and the Support Threshold}
+
+Finally, we consider the most general case of a
+change, where streams are added to the database and
+the support threshold is increased. Again, we note
+that the change in the stream thresholds that is
+induced by the change determines whether the sets of
+matching queries are in a containment relation, i.e.,
+whether the change leads only to frequent queries
+being no longer frequent, but not to additional
+frequent queries. We capture this property as follows:
+\begin{lemma}
+    \label{lemma:update}
+    Let $D_0=\{S_1,\dots,S_d\}$ and
+    $D_1=D_0 \cup \{S_{d+1}, \dots, S_{d+k}\}$
+    be stream databases, and $\theta_0$ and $\theta_1$
+    with $\theta_0 \leq \theta_1$ be support
+    thresholds for $D_0$ and $D_1$, respectively.
+    Then, it holds that $s(|D_1|,\theta_1) \geq
+    s(|D_0|,\theta_0) + k \implies Q_{D_1}^{\theta_1}
+    \subseteq Q_{D_0}^{\theta_0}$.
+\end{lemma}
+\textit{Proof.}
+Let $q_1$ be a query in $Q_{D_1}^{\theta_1}$. Recall
+that $M_+(q_1,D_1)$ is the set of streams in $D_1$
+that match $q_1$, $M_+(q_1,D_0)$ is the set of streams
+in $D_0$ that match $q_1$, and $M_+(q_1,D_1\backslash
+D_0)$ is the set of newly added streams that match
+$q_1$. Let $|M_+(q_1,D_1\backslash D_0)|= j$ be the
+number of these streams, for which it holds that $j\in
+[0,k]$. Then, it suffices to show that $|M_+(q_1,D_0)|
+> s(|D_0|,\theta_0)$. As before, we define $s_0 =
+s(|D_0|,\theta_0)$ and $s_1 = s(|D_1|,\theta_1)$.
+Then, we derive the following bounds for the
+cardinality of the aforementioned sets:
+$$|M_+(q_1,D_0)| = |M_+(q_1,D_1)| -
+|M_+(q_1,D_1\backslash D_0)| \geq s_1 - j \geq s_0 + k
+- j \geq s_0.$$
+% Then $|M_2_+| \geq s_2 > s_1$.
+% If $\{S_{n+1}, \dots, S_{n+k}\}\subseteq M_+(q_1,D_1)$.
+% $$|M_+(q_1,D_1)\backslash \{S_{n+1}, \dots, S_{n+k}\}| = s_1 - k
+% \geq s_0 + k - k = s_0.$$
+% $$|M_2_+\backslash \{S\}| \geq \lceil (n+1) \cdot \theta_1 \rceil - 1
+% \geq \lceil n \cdot \theta_1 \rceil = s.$$
+% Then $M_+(q_1,D_1)\backslash \{S_{d+1}, \dots, S_{d+k}\} = M_+(q_1,D_0)$ and supp$(q_1,D_0) \geq \frac{|M_+(q_1,D_0)|}{|D_0|} \geq \theta_0$.
+% If  $\exists S \in \{S_{d+1}, \dots, S_{d+k}\}$ s.t.
+%$S\not\in M_+(q_1,D_1)$:
+% If $\{S_{n+1}, \dots, S_{n+k}\}\not\subseteq M_+(q_1,D_1)$.
+% Then $M_+(q_1,D_1) \subseteq D_0$.
+% $$\frac{|M_+(q_1,D_1)|}{|D_0|} \geq \frac{\lceil (n+k) \cdot \theta_1 \rceil}{n}
+% \geq \frac{\lceil n \cdot \theta_0 \rceil}{n} \geq \frac{n\cdot\theta_0}{n} = \theta_0.$$
+% Then supp$(q_1,D_0) \geq \theta_0$ and $q_1 \in Q_0$.
+Hence, indeed, it holds that $Q_{D_1}^{\theta_1}
+\subseteq Q_{D_0}^{\theta_0}$. \hfill  \qed
+
+We note that \autoref{lemma:update} provides a
+generalization of \autoref{prop:db_change_inclusion}.
+That is, if $\theta_1 = \theta_0$, i.e., streams are
+added to the database, but the support threshold
+remains unchanged, due to the definition of the stream threshold, $s_0+k$ is an
+upper bound for $s_1$. As such, the condition of the implication on the
+containment relation becomes $s_1 = s_0+k$.
+
+The above lemma gives a condition, i.e., $s_1\geq
+s_0+k$, to conclude on a containment relation for the
+sets of matching queries under an update of the stream
+database, regardless of the streams that are added.
+
+Considering the general problem context as visualized
+in \autoref{fig:matching_sets}, one might assume that
+$Q_{D_1}^{\theta_1}\subseteq Q_{D_0}^{\theta_0}
+\implies Q_{D_1}^{\theta_0}\subseteq
+Q_{D_0}^{\theta_0}$ or $Q_{D_1}^{\theta_1}\subseteq
+Q_{D_0}^{\theta_1}$. That is, if the set of matching
+queries is only reduced by changes of potentially
+both, the stream database and the support threshold,
+the containment relation is expected to hold also if
+only one of the changes is considered.
+However, this is actually not the case, which we
+illustrate with a counter example in
+\autoref{tab:example}.
+
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{@{}cccccccc@{}}
+  \toprule
+  $d$ & $d+1$ & $\theta_0$ & $\theta_1$ &
+  $s(d,\theta_0)$ & $s(d+1,\theta_0)$ &
+  $s(d,\theta_1)$ & $s(d+1,\theta_1)$ \\ \midrule
+  99  & 100   & 0.8        & 0.9        & 80              & 80                & 90              & 90                \\ \bottomrule
+  \end{tabular}%
+  \caption{Stream thresholds under an example change
+  in the stream database and the support threshold.}
+  \label{tab:example}
+  \end{table}
+
+Here, we consider the setting of a stream database of
+size $d=99$, for which one stream is added to obtain a
+database of size $d+1=100$. Moreover, we consider a
+change of the support threshold from $\theta_0=0.8$ to
+$\theta_1=0.9$. For this setting, it holds that
+$s(d+1,\theta_0) = s(d,\theta_0)$ as well as
+$s(d+1,\theta_1) = s(d,\theta_1)$, i.e., the stream threshold does not change, if
+though a stream was added to the database. Hence, without information on this
+stream, we cannot
+conclude that $Q_{D_1}^{\theta_0} \subseteq
+Q_{D_0}^{\theta_0}$ or
+$Q_{D_1}^{\theta_1} \subseteq Q_{D_0}^{\theta_1}$.
+However, the change of both, the stream database and the support threshold,
+actually leads to a change in the stream threshold, i.e., $s(d+1,\theta_1) \geq
+s(d,\theta_0)$. Based thereon, using \autoref{lemma:update}, we can conclude on
+the containment relation for the sets of matching queries, $Q_{D_1}^{\theta_1}
+\subseteq Q_{D_0}^{\theta_0}$.
+
+% We can now take a look at the probability of the different cases for the stream thresholds $s_2$ and $s_1$,
+% namely $s_2 = s_1$ and $s_2 \geq s_1+1$.
+
+% With $s_1 = \lceil n \cdot \theta_1 \rceil$ and $s_2 = \lceil (n+1) \cdot \theta_2 \rceil$ we know the boundaries for
+% $\theta_1$ and $\theta_2$ in relation to the stream thresholds $s_1$ and $s_2$:
+
+% \begin{align*}
+%      \frac{s_1-1}{n} &< \theta_1 \leq \frac{s_1}{n} \\
+%     \frac{s_2}{n+1} < &\theta_2 \leq \frac{s_2}{n+1}.
+% \end{align*}
+
+% Subtracting the two inequalities we obtain:
+% $$\frac{s_2-1}{n+1} - \frac{s_1}{n} < \theta_2 - \theta_1 < \frac{s_2}{n+1} - \frac{s_1-1}{n}.$$
+
+% Now we can look at the two cases:\\
+% $s_2 = s_1$:
+% \begin{align}
+%      \frac{s_1-1}{n} - \frac{s_1}{n} &< \theta_2 - \theta_1 < \frac{s_1}{n+1} - \frac{s_1}{n+1} \nonumber\\
+%      \implies -\frac{1}{n+1} - \frac{s_1}{n(n+1)} &< \theta_2 - \theta_1 < \frac{1}{n} - \frac{s_1}{n(n+1)} \nonumber \\
+%       \implies 0 &< \theta_2 - \theta_1 < \frac{1}{n} - \frac{s_1}{n(n+1)}. \label{eq:case1}
+%     \end{align}
+
+%   $s_2 \geq s_1+1: s_2=s_1+k+1, k\in[0,1,\dots,n-1]$:
+%   \begin{align}
+%     \frac{s_1+k}{n+1} - \frac{s_1}{n} &< \theta_2 - \theta_1 < \frac{s_2}{n+1} - \frac{s_1-1}{n} \nonumber \\
+%     \implies \frac{k}{n+1} - \frac{s_1}{n(n+1)} &< \theta_2 - \theta_1 < \frac{1}{n} + \frac{k+1}{n+1} - \frac{s_1}{n(n+1)} \label{eq:case2} \\
+%   k=0:  \implies 0 &< \theta_2 - \theta_1 < \frac{1}{n} + \frac{1}{n+1} - \frac{s_1}{n(n+1)}. \label{eq:case2k0}
+%   \end{align}
+
+%   To obtain all possible combinations of $\theta_1$ and $\theta_2$ we have to consider all possible values for $s_1$ and $k$.
+%   $$
+%   \sum_{s_1=1}^{n} \left( \underbrace{\frac{1}{n} - \frac{s_1}{n(n+1)}}_{\autoref{eq:case1}} +
+%    \underbrace{\frac{1}{n} + \frac{1}{n+1} - \frac{s_1}{n(n+1)}}_{\autoref{eq:case2k0}} +
+%   \sum_{k=1}^{n+1-s_1} \underbrace{\frac{1}{n} - \frac{s_1}{n(n+1)}}_{\autoref{eq:case2}} \right) = \frac{1}{2} + n - \frac{1}{2} = n.
+%   $$
+
+%   For the probabilities of the different cases we obtain:
+%   \begin{align*}
+%     &\mathbb{P}[s_2 = s_1] = \frac{1}{2n} \\
+%     &\mathbb{P}[s_2 \geq s_1+1] = \frac{2n-1}{2n}.
+%   \end{align*}
+

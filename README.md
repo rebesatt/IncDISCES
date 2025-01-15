@@ -35,3 +35,15 @@ python experiments/update_experiments.py
 ```
 During the run of the experiments, the progress
 can be followed and results can be seen in 'results/evaluation.csv'.
+
+In order to run the experiments, first download the repository with:
+```
+git clone https://github.com/rebesatt/IncDISCES.git
+```
+or download the Zip-File at: https://github.com/rebesatt/IncDISCES
+
+Then inside the repository run the command:
+```bash
+python reproduce_paper.py
+```
+

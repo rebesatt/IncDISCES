@@ -1,0 +1,330 @@
+% !TeX encoding = UTF-8
+% !TeX program = pdflatex
+% !BIB program = bibtex
+
+%%% To write an article in English, please use the option ``english'' in order
+%%% to get the correct hyphenation patterns and terms.
+%%% \documentclass[english]{class}
+%%% for anonymizing an article you can use the ``anonymous'' option.
+%%%
+%%% Um einen Artikel auf deutsch zu schreiben, genügt es die Klasse ohne
+%%% Parameter zu laden.
+%%% Zur Anonymisierung kann die ``anonymous'' Option genutzt werden.
+\documentclass[english]{lni}
+%%
+\usepackage{wasysym}
+\usepackage{graphicx}
+\usepackage{balance}  % for  \ance command ON LAST PAGE  (only there!)
+\usepackage{amsmath}
+%\usepackage{amssymb}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{wrapfig}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage[english]{babel}
+\usepackage{multirow}
+\usepackage{times}
+\usepackage{tabularx}
+\usepackage{verbatim}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[export]{adjustbox}
+\usepackage[utf8]{inputenc}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}%
+\usepackage{etoolbox}
+\usepackage{tcolorbox}
+\usepackage{xcolor}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage{bbm}
+\usepackage[flushleft]{threeparttable}
+\usepackage{wrapfig}
+\usepackage{ulem}
+\DeclareMathOperator{\poly}{\textup{poly}}
+
+
+\newcommand{\code}[1]{{\textsf{{\small #1}}}}
+% \newcommand{\todo}[1]{\textcolor{red}{\textit{#1}}}
+\newcommand{\todomargin}[1]{\marginpar{\textcolor{red}{\textit{#1}}}}
+
+\definecolor{forestgreen}{HTML}{228C22}
+\definecolor{myblue}{HTML}{1E88E5}
+\definecolor{myyellow}{HTML}{004D40}
+\definecolor{mymagenta}{HTML}{D81B60}
+
+\renewcommand{\labelitemi}{$\circ$}
+\renewcommand{\labelitemii}{$-$}
+
+\def\Snospace~{\S{}}
+\newcommand\sectionautorefname{\Snospace}
+\newcommand\subsectionautorefname{\Snospace}
+\renewcommand*\algorithmautorefname{Alg.}
+\newcommand*\exampleautorefname{Example}
+\newcommand*\lemmaautorefname{Lemma}
+%\newcommand*\theoremautorefname{Theorem}
+\newcommand*\propertyautorefname{Property}
+\newcommand*\problemautorefname{Problem}
+\newcommand*\definitionautorefname{Def.}
+\renewcommand*{\algorithmcflinename}{line}
+% \renewcommand\equationautorefname{Eq.}
+% \renewcommand*\figureautorefname{Fig.}
+
+\makeatletter
+\newcommand{\removelatexerror}{\let\@latex@error\@gobble}
+\makeatother
+
+\SetAlgoSkip{}
+
+\newcommand{\exampleboxh}[2]{
+\begin{tcolorbox}[colback=white,
+	float,
+	floatplacement=h,
+	enlarge top by=-.6em,
+	enlarge bottom by=-.6em,
+	colframe=gray!75!black,
+	title=\scshape\fontseries{sb}\selectfont#1,
+	boxsep=3pt,
+	left=1pt,
+	right=1pt,
+	top=0pt,
+	bottom=0pt,
+	toptitle=0pt,
+	bottomtitle=0pt,
+	lefttitle=1pt,
+	righttitle=1pt,
+	]{\small%
+#2%
+}
+\end{tcolorbox}%
+}
+
+\newcommand{\examplebox}[2]{
+\begin{tcolorbox}[colback=white,
+	float,
+	floatplacement=t,
+	enlarge bottom by=-.6em,
+	colframe=gray!75!black,
+	title=\scshape\fontseries{sb}\selectfont#1,
+	boxsep=3pt,
+	left=1pt,
+	right=1pt,
+	top=1pt,
+	bottom=1pt,
+	toptitle=0pt,
+	bottomtitle=0pt,
+	lefttitle=1pt,
+	righttitle=1pt,
+	]{\small%
+		#2%
+	}
+\end{tcolorbox}%
+}
+
+\newtheorem{corollary}{Corollary}
+\newtheorem{problem}{Problem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
+\newtheorem{property}{Property}
+\newtheorem{theorem}{Theorem}
+
+\newcommand{\qed}{\leavevmode
+  \hbox to.77778em{%
+  \hfil\vrule
+  \vbox to.675em{\hrule width.6em\vfil\hrule}%
+  \vrule\hfil}}
+
+  \lstset{ %
+  belowskip=-2em,
+  backgroundcolor=\color{white},   % choose the background color; you must
+  basicstyle=\footnotesize\ttfamily,        % the size of the fonts that are
+  %used
+  %for the code
+  breakatwhitespace=false,         % sets if automatic breaks should only
+  %happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{Brown},    % comment style
+  deletekeywords={...},            % if you want to delete keywords from the
+  %given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for
+  %8-bits encodings only, does not work with UTF-8
+  frame=,                    % adds a frame around the code
+  keepspaces=true,                 % keeps spaces in text, useful for keeping
+  %indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{ACMDarkBlue},       % keyword style
+  language=,                 % the language of the code
+  morekeywords={*,RETURN,SEQ,WITHIN,PATTERN,NOT,
+      WHERE,AND,NSEQ,ms,h, min, range},
+  %
+  %if you want to add more keywords to the set
+  numbers=none,                    % where to put the line-numbers; possible
+  %values are (none, left, right)
+  numbersep=5pt,                   % how far the line-numbers are from the
+  %code
+  numberstyle=\tiny\color{gray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be
+  %changed
+  %on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,                % show spaces everywhere adding particular
+  %underscores; it overrides 'showstringspaces'
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding
+  %particular
+  %underscores
+  stepnumber=1,                    % the step between two line-numbers. If
+  %it's
+  %1, each line will be numbered
+  stringstyle=\color{RedOrange},     % string literal style
+  tabsize=2,                       % sets default tabsize to 2 spaces
+  title=\lstname,                   % show the filename of files included
+  %with
+  %\lstinputlisting; also try caption instead of title
+}
+
+
+% \hypersetup{
+%   pdftoolbar=true,        % show Acrobat?s toolbar?
+%   pdfmenubar=true,        % show Acrobat?s menu?
+%   pdffitwindow=false,     % window fit to page when opened
+%   pdfstartview={FitH},    % fits the width of the page to the window
+%   pdftitle={},    % title
+%   pdfauthor={},     % author
+%   pdfsubject={},   % subject of the document
+%   pdfcreator={},   % creator of the document
+%   pdfproducer={}, % producer of the document
+%   pdfkeywords={}, % list of
+%   %keywords
+%   pdfnewwindow=true,      % links in new window
+%   colorlinks=true,       % false: boxed links; true: colored links
+%     linkcolor=Brown,          % color of internal links (change box color
+% %	with
+% %	linkbordercolor)
+%     citecolor=OliveGreen,        % color of links to bibliography
+%     filecolor=magenta,      % color of file links
+%     urlcolor=NavyBlue           % color of external links
+% }
+
+\newcommand{\sys}{DISCES\xspace}
+
+\renewcommand{\UrlFont}{\ttfamily\scriptsize} %?
+\newcommand{\sstitle}[1]{\smallskip\noindent\textbf{#1.\/}}
+\newcommand{\sstitlenoskip}[1]{\noindent\textbf{#1.\/}}
+
+\newcommand{\change}[1]{\textcolor{blue}{#1}}
+
+
+\DeclareMathOperator{\dom}{dom}
+\DeclareMathOperator{\argmin}{argmin}
+
+\newcommand\Mark[1]{\textsuperscript#1}
+\newcommand{\True}{\mathit{True}}
+\newcommand{\False}{\mathit{False}}
+\def\ua{\Mark{*}}
+\def\ub{\Mark{\dag}}
+\def\uc{\Mark{\#}}
+\def\ud{\Mark{+}}
+
+
+\begin{document}
+
+\def\Snospace~{\S{}}
+\renewcommand\sectionautorefname{\Snospace}
+\renewcommand\subsectionautorefname{\Snospace}
+
+
+%%% Mehrere Autoren werden durch \and voneinander getrennt.
+%%% Die Fußnote enthält die Adresse sowie eine E-Mail-Adresse.
+%%% Das optionale Argument (sofern angegeben) wird für die Kopfzeile verwendet.
+\title[Incremental Updates of Discovered Event Queries]{Embracing Change:
+Incremental Updates of Discovered Event Queries}
+%% \subtitle{Untertitel / Subtitle} % if needed
+ \author[1]{Rebecca Sattler}{sattlere@hu-berlin.de}{0000-0002-7342-7131}
+ \author[1]{Sarah Kleest-Meißner}{kleest-meissner.sarah@alumni.hu-berlin.de}{0000-0002-4133-7975}
+ \author[1]{Steven Lange}{langestx@hu-berlin.de}{0009-0001-7217-8188}
+ \author[1]{Markus Schmid}{mlschmid@mlschmid.de}{0000-0001-5137-1504}%
+ \author[1]{Nicole
+ Schweikardt}{schweikn@informatik.hu-berlin.de}{0000-0001-5705-1675}%
+ \author[1]{Matthias
+ Weidlich}{matthias.weidlich@hu-berlin.de}{0000-0003-3325-7227}%
+
+ \affil[1]{Humboldt-Universität zu Berlin\\Institut für Informatik\\Unter
+ den Linden 6\\10099 Berlin\\Germany}
+
+ \maketitle
+\begin{abstract}
+In complex event processing (CEP), queries are evaluated continuously over
+streams of events to detect situations of interest, thereby
+facilitating reactive applications.
+However, users often lack insights into the precise event pattern that
+characterizes the situation, which renders the
+definition of the respective queries challenging.
+Once a database of finite, historic
+streams, each containing a materialization of the situation of interest, is
+available, query discovery supports users in the
+definition of the desired queries. It constructs the queries that match a
+certain share of the given streams, as determined by a support
+threshold. Yet, upon changes in the database or changes of the support
+threshold, existing algorithms need to construct the resulting
+queries from scratch, neglecting the queries obtained in previous runs.
+In this paper, we aim to avoid the resulting inefficiencies by techniques
+for incremental query discovery. We first provide a theoretical analysis of
+the problem context, before presenting algorithmic solutions to cope with
+changes in the stream database or the adopted support threshold.
+Our experiments using real-world data show that our incremental query
+discovery
+reduces the runtimes by up to three orders of magnitude compared to a
+baseline solution.
+\end{abstract}
+\begin{keywords}
+Complex Event Processing \and Event Streams \and Query Discovery \and
+Incremental Updates
+\end{keywords}
+%%% Beginn des Artikeltexts
+
+\input{introduction.tex}
+\input{background.tex}
+\input{problem-setting.tex}
+\input{algorithms.tex}
+\input{evaluation.tex}
+\input{related-work.tex}
+
+\section{Conclusions}
+\label{sec:conclusions}
+
+In this paper, we focused on the problem of event query discovery in the presence of
+changes. That is, once all frequent queries have been discovered for a given stream
+database and a given support threshold, we studied how this set can be updated
+incrementally if the database changes and/or the support threshold changes, in order to
+avoid to recompute the respective queries from scratch. We first provided a theoretical
+analysis of the problem context. Here, we could establish conditions under which the set
+of matching queries after the change is a subset of the respective set before the
+change or vice versa. This information is valuable as it highlights when it is sufficient to verify
+whether the existing queries are still frequent, but there is no need for the generation
+of additional queries. Based on these insights, we also presented algorithmic solutions
+that adapt the set of queries incrementally. Our experiments using real-world data
+demonstrate that our approach to incremental query
+discovery is significantly faster than a baseline that recomputes the queries, reducing
+runtime by up to three orders of magnitude. In future work, we intend to
+increase the efficiency further,
+e.g., through the design of data structures that capture further details on where in the
+streams the queries match as well as through the use of statistics about the stream
+database (e.g., on the distribution of attribute values over streams) and we plan to extend
+our evaluations by adding alternative performance metrics, such as memory usage.
+
+
+% \begin{acks}
+\section*{Acknowledgments}
+ This work was funded by the German Research
+Foundation (DFG), CRC 1404: "FONDA: Foundations of
+Workflows for Large-Scale Scientific Data Analysis".
+%  Additional funding was provided by [...] and [...].
+% We also thank [...] for contributing [...].
+% \end{acks}
+
+%%% Angabe der .bib-Datei (ohne Endung) / State .bib file (im Falle der
+%%%Nutzung von BibTeX)
+\bibliography{references}
+% \printbibliography % im Falle der Nutzung von biblatex
+\end{document}

@@ -1,0 +1,562 @@
+\section{Algorithms for Incremental Discovery of Event Queries}
+\label{sec:algos}
+
+In this section, we show how event query discovery is
+realized
+incrementally, under the changes discussed in the previous section. To this
+end, we first summarize a basic discovery procedure that serves as a
+baseline (\autoref{sec:discovery}). Then, we discuss how
+to update
+the set of matching queries (i) once streams are added
+and/or the support threshold is increased (\autoref{sec:insert_increment}),
+and (ii) once
+existing streams are deleted and/or the support threshold
+is decreased (\autoref{sec:delete_decrease}).
+
+\subsection{Basic Algorithm for Event Query Discovery}
+\label{sec:discovery}
+
+As a basic algorithm for event query discovery, we consider an approach that
+searches through the space of candidate queries to collect all matching
+queries. To this end, it follows an iterative generate-and-test scheme. For
+each query that matches the stream database, stricter child queries are
+generated through the addition of query terms, or the insertion of variables
+and attribute values for placeholders in existing
+query terms. The child
+queries are, in turn, evaluated over the stream
+database. If they match, they become part of the
+result set and their child
+queries are considered further.
+
+By starting the approach with an empty query, the approach iteratively
+explores the search space of candidate queries. It terminates once all child
+queries of all matching queries have been assessed.
+
+The essence of this approach is captured by the function \textsc{Discovery},
+formalized in \autoref{alg-discovery}.
+It takes as input a stream database $D$; a support threshold $\theta$;
+the frequent stream alphabet $\Gamma(D,\theta)$;
+a set of queries $Q$ that are frequent in $D$; a parent dictionary
+$P$ that is modelled as a
+function $P: \mathcal{Q} \to \mathcal{Q}$, mapping child queries to their
+parent; and a stack $O$ of queries that are frequent in $D$ and still shall
+be explored by a depth-first search through the
+space of candidate queries.
+
+\begin{algorithm}[t]
+	\small
+	\caption{\textsc{Discovery}}
+	\label{alg-discovery}
+	\KwIn{\, \ Stream database $D$,
+		%event schema $\mathcal{A}$, sequence of query var. $\mathcal{X}^<$,
+		support threshold $\theta$,
+		frequent stream alphabet $\Gamma(D,\theta)$,
+		 \\ \hspace{3em} \,
+		set of queries $Q$, parent dictionary $P$, query stack $O$
+		% \\ \hspace{3em} \,
+		% Boolean flag $b\in \{\True,\False \}$ whether to insert variables
+		.}
+	\KwOut{Updated set of queries $Q$, updated parent dicitionary $P$.}
+	\BlankLine
+
+	\tcc{\scriptsize Explore queries that are pushed to the stack}
+	%${O \leftarrow}$ empty stack; $O.\textsc{push}(q)$\;
+	\While{${O}$ not empty}
+	{
+		${q \leftarrow O}.\textsc{pop}()$\;
+		\If{\normalfont{\textsc{Match}}$({q,D,\theta}$)} {
+			\tcc{\scriptsize For frequent queries,
+				explore their children}
+			${Q \leftarrow Q \cup \left\{q\right\} }$\;
+			${P \leftarrow}$
+			\textsc{ChildQueries}($\mathit{q,\Gamma(D,\theta),P}$)\;
+			${C} \leftarrow  \{q'\in \dom(P) \mid P(q')=q\}$\;
+			\If{$ C \neq \emptyset$}{
+				\lForEach{$q'\in C$}{
+					$O.\textsc{push}(q')$}
+			}
+		}
+	}
+	{\Return{$\mathit{Q,P}$}}
+\end{algorithm}
+
+Function \textsc{Discovery} then explores the queries on the given stack.
+Each of them is evaluated against the stream database using the Boolean
+function \textsc{Match}, which returns true if query $q$ is frequent in the
+stream database $D$ as defined by the support threshold $\theta$; otherwise,
+it returns false. If the query is frequent, it is added to the result set
+$Q$ and its child queries are generated using function \textsc{ChildQueries}
+and recorded in the aforementioned parent dictionary $P$. If such child
+queries have indeed been generated, i.e., set $C$ is not empty, these
+queries are pushed to the stack for further exploration.
+When the stack is empty, the function returns the set of matching
+queries as well as the updated parent dictionary.
+
+Moreover, we summarize the functionality of \textsc{ChildQueries} to
+generate child queries of a query $q$ as follows. It generates child queries
+by the insertion of a \emph{single} symbol, i.e., a variable or an attribute
+value from the frequent stream alphabet, for a placeholder in one of the
+existing
+query terms. In addition, it
+also generates further child queries by appending a new query term to the
+query that is empty (i.e., comprises placeholders) except for one position
+that is filled with a symbol (variable or attribute value). In general,
+these insertions consider all possible attribute values, as well as a set of
+possible variables (for which the size is bounded by half of the length of
+the shortest stream in the database).
+
+While we use function \textsc{Discovery} also in our incremental approaches
+for event query discovery, a basic discovery algorithm simply instantiates
+by adding the empty query to the query stack and creating its entry in the
+parent dictionary. We formalize this instantiation in
+\autoref{alg-baseline}. Given a stream database $D$ and support threshold
+$\theta$, it initializes the result set $Q$, derives the frequent stream
+alphabet $\Gamma(D,\theta)$, constructs the empty query
+$\langle\varepsilon\rangle$ and pushes it to the stack, before starting the
+exploration with function \textsc{Discovery}.
+
+\begin{algorithm}[H]
+	\small
+	\caption{\textsc{Basic Discovery Algorithm} }
+	\label{alg-baseline}
+	\KwIn{\, \ Stream database $D$, support threshold $\theta$.}
+	\KwOut{Set of matching queries $Q$, updated parent dictionary $P$.}
+	\BlankLine
+	$\mathit{Q \leftarrow \emptyset}$\;
+	$\Gamma(D,\theta) = \{a \in
+	\Gamma \mid |\{S \in D \mid \exists \ j\in\{1,\dots,|S|\},
+	i\in\{1,\dots,n\}: S[j].A_i = a\}| \geq s(|D|,\theta)\}$\;
+%	$\Gamma_D \gets \{a \in \Gamma \mid |M_+(a,D)| \geq \lceil |D| \cdot
+%	\theta \rceil\}$\;
+	$q \gets\langle\varepsilon\rangle$\;
+	$P(q) \gets
+	\langle\varepsilon\rangle$\;
+
+	${O \leftarrow}$ empty stack\;
+	$O.\textsc{push}(q)$\;
+	$ Q,P \leftarrow \textsc{Discovery}(D, \theta, \Gamma(D,\theta), Q, P,
+	O)$\;
+	{\Return{$\mathit{Q,P}$}}
+\end{algorithm}
+
+%The baseline algorithms \autoref{alg-baseline} relies
+%on an iterative generation of query candidates,
+%which are then matched against a stream database. It follows a
+%bottom-up direction in the exploration of candidate queries and step-wise
+%generation of stricter queries for a given query $q$. It starts with the
+%empty
+%query, which will be elaborated further later.
+%The child queries of $q$ are those obtained by inserting
+%a new variable, by inserting a variable that has been present already, or by
+%inserting an attribute value; either way, considering an existing query term
+%or a newly added query term.
+%\color{blue}
+%Variables are inserted in a certain order, which
+%is reflected in a total order $<$ over a set of variables $\mathcal{X}$. To
+%simplify the notation, we write $\mathcal{X}^<$ for the sequence of
+%variables induced by $<$ over $\mathcal{X}$. Also, our
+%construction employs at most $s/2$ variables with $s=\min_{S\in D} |S|$
+%being the minimal stream length in the stream database. Hence, the size of
+%$\mathcal{X}$ and the length of $\mathcal{X}^<$ are bounded.
+%
+%Query candidate generation, formalized in
+%\autoref{alg-bu-df:childquery}, takes as input a query $q$; an event
+%schema $\mathcal{A}$; a supported alphabet $\Gamma_D$; a parent dictionary
+%$P$ that is modelled as a
+%function $P: \mathcal{Q} \to \mathcal{Q}$, mapping child queries to their
+%parent; a sequence of variables $\mathcal{X}^<$; and a Boolean flag $b$ to
+%control whether variables shall be inserted. The algorithm returns the set
+%of child queries for $q$.
+%
+%\autoref{alg-bu-df:childquery} is divided into three parts, following an
+%initialization (\autoref{alg1:init_start} - \ref{alg1:init_end}),
+%each capturing one type of insertion. It is designed such that \emph{all}
+%child queries are obtained by
+%insertion
+%of a single symbol (attribute value or variable) are constructed
+%\emph{exactly once}. The generation relies on the auxiliary function
+%$\textsc{Next}$
+%(\autoref{alg1:next_start} - \ref{alg1:next_end}). Given a query, it
+%generates query candidates by inserting a given symbol (variable or
+%attribute value) in
+%any query term following a given position in the query, if the query
+%contains a placeholder for that attribute. In addition, it
+%generates candidates by appending a new query term to the query that
+%is empty except for the given symbol for the given attribute. Based thereon,
+%the three parts of the main algorithm include:
+%
+%\textit{Insertion of a new variable} (\autoref{rule:insertnewvar} -
+%\ref{rule:insertnewvar_end}). For each attribute, we consider all query
+%terms after the last occurrence of any attribute value ($g$) and after the
+%first
+%occurrence of the last inserted variable ($f$). Using function
+%$\textsc{Next}$, a single new variable $\mathcal{X}^<[v+1]$ is introduced
+%by replacing a placeholder or adding a new query term.
+%
+%\begin{algorithm}[H]
+%	\footnotesize
+%	\caption{\textsc{ChildQueries}: Query Cand. Generation}
+%	\label{alg-bu-df:childquery}
+%	\KwIn{\, \ Query $q$, event schema $\mathcal{A}$, supported alphabet
+%		$\Gamma_D$, \\ \hspace{3em} \,
+%		parent dictionary $P$, sequence of query variables $\mathcal{X}^<$,
+%		\\ \hspace{3em} \,
+%		Boolean flag $b\in \{\True,\False \}$ whether to insert variables.
+%	}
+%	%\tcc*{some comment}		\;
+%	\KwOut{Updated parent dictionary $P$.}
+%	\SetKwFunction{FNext}{\textnormal{\textsc{Next}}}%
+%	\BlankLine
+%	$\mathit{g \gets}$ position of last inserted attribute value in $q$\;
+%	\label{alg1:init_start}
+%	$\mathit{f \gets}$ first position of last inserted variable in $q$\;
+%	$z \gets \max(g,f)$\;
+%	$\mathit{n \leftarrow} |\mathcal{A}|$\;
+%	\label{alg1:init_end}
+%	\tcc{\scriptsize Shall variables be inserted?}
+%	\If{$b= \True$}{
+%		$v \gets$ number of distinct query variables in $q$\;
+%		\tcc{\scriptsize Insert a new variable
+%			$\mathcal{X}^<[v+1]$}
+%		\ForEach{$A\in\mathcal{A}$}{
+%			\label{rule:insertnewvar}
+%			\ForEach{$q'\in
+%				\FNext(q,z,A,\mathcal{X}^<[v+1],n)$}{
+%				\label{rule:insertnewvar_step2}
+%				\ForEach{$q''\in
+%					\FNext(q',z+|q'|-|q|,A,\mathcal{X}^<[v+1],n)$}{
+%					$P(q'') \leftarrow q$\;
+%				}
+%			}
+%		}
+%		\label{rule:insertnewvar_end}
+%		\tcc{\scriptsize Insert last inserted variable
+%			$\mathcal{X}^<[v]$}
+%		$l \gets$ last position of last inserted variable in $q$\;
+%		$s \gets$ last inserted symbol in $q$\;
+%
+%		\If{$s=\mathcal{X}^<[v]$}{
+%			\label{rule:insertexvar}
+%			$\mathit{A \leftarrow}$ attribute $A\in \mathcal{A}$ with $s\in
+%			\dom(A)$\;
+%			\lForEach{$q'\in \FNext(q,l,A,\mathcal{X}^<[v],n)$}{
+%				$P(q') \leftarrow q$
+%			}
+%		}
+%		\label{rule:insertexvar_end}
+%	}
+%	\tcc{\scriptsize Insert new supported attribute value}
+%	\ForEach{$A\in\mathcal{A}$}{
+%		\label{rule:inserttype}
+%		\ForEach{$a\in (\Gamma_{D}\cap \dom(A))$}
+%		{
+%			\lForEach{$q'\in \FNext(q,z,A,a,n)$}{
+%				$P(q') \leftarrow q$
+%			}
+%		}
+%	}
+%	\label{rule:inserttype_end}
+%	\Return{$\mathit{P}$}
+%
+%
+%	\BlankLine
+%
+%	\tcc{\scriptsize Function to generate the next candidate queries}
+%	\FNext{\textnormal{query} $q$, \textnormal{start pos.} $s$,
+%		\textnormal{attribute} $A$, \textnormal{symbol}	$y$,
+%		\textnormal{number
+%			of attributes} $n$}{
+%		\label{alg1:next_start}
+%
+%		$\mathit{Q' \leftarrow \emptyset}$\;
+%		\ForEach{$i\in \{s,\ldots, |q|\}$}
+%		{
+%			\tcc{\scriptsize Generate candidate by replacing placeholder
+%				with
+%				given variable/attribute value $y$}
+%			\If{$q[i].A=\_$}{
+%				$q' \leftarrow  q$\;
+%				$q'[i].A \leftarrow y$\;
+%				$Q' \leftarrow Q' \cup \left\{q'\right\}$\;
+%
+%			}
+%			\tcc{\scriptsize Generate candidate by including new query term
+%				that
+%				only contains given variable/attribute value $y$}
+%			$e' \leftarrow \varepsilon$\;
+%			$e'.A \leftarrow y$\;
+%			$q'\leftarrow \langle q[1],\dots,
+%			q[i], e', q[i+1],\dots, q[|q|]
+%			\rangle$\;
+%			$Q' \leftarrow Q' \cup \left\{q'\right\}$\;
+%		}
+%		\Return{$\mathit{Q'}$}
+%		\label{alg1:next_end}
+%	}
+%\end{algorithm}
+
+
+\subsection{Stream Insertion and/or Increased Support
+Threshold}
+\label{sec:insert_increment}
+
+Having discussed a basic discovery algorithm, we now
+present a first algorithmic solution to incremental
+processing under changes. Specifically, we consider the
+case that streams are added and/or that the support
+threshold is increased.
+
+We summarize the idea behind the algorithm as follows:
+From
+\autoref{lemma:update}, we know that the set of matching
+queries after the update will be a subset of the original
+set of matching queries. As such, no new queries need to
+be generated; we only need to check whether the
+queries in the given set are still
+frequent. Moreover, the scope of this verification depends
+on the support threshold. If it remains unchanged and only
+the database changed, it suffices to evaluate the existing
+queries over the newly added streams. Otherwise, if
+the threshold is increased as well, the entire updated
+stream database needs to be considered.
+
+We formalize this approach in \autoref{alg_gen}. It
+takes as input the original stream database $D_0$; the
+original support threshold $\theta_0$; the
+set of matching queries $Q_0$ obtained for $D_0$ and
+$\theta_0$; the parent dictionary $P$ for these
+queries; the updated stream database $D_1$; and the
+updated support threshold $\theta_1$. It returns the
+set of matching queries $Q_1$ for $D_1$ and
+$\theta_1$ along with the updated parent dictionary
+$P$.
+
+After initializing the result set $Q_1$, the
+algorithm determines the scope for the verification
+of the existing queries, as the entire updated
+stream database $D_1$ or the added streams
+$D_1\setminus D_0$. Then, the verification is
+operationalized with stack onto
+which we push the queries that shall be checked. We start
+with the empty query and then go through $Q_0$ by means of
+the parent-child-relation between queries, as stored in
+the parent dictionary.
+
+%If a queries matches, it is added to the updated query
+%set and its children are
+%added to the stack of queries to be checked for their
+%matching behavior.
+
+% In case it does not match, we we add its parent query to the stack of queries to be checked.
+% Then discard the query entry from the parent dictionary $P$.
+
+%Once the stack is empty, the algorithm returns the
+%updated query set $Q_1$ and the parent dictionary $P$.
+
+
+\begin{algorithm}[t]
+    \small
+    \caption{\textsc{UpdatePlus}}
+    \label{alg_gen}
+    \KwIn{\, \ Stream database $D_0$, support threshold $\theta_0$,
+    set of matching queries $Q_0$,
+	 \\ \hspace{3em} \,
+    parent dictionary $P$,
+    updated stream database $D_1$,
+    updated support threshold $\theta_1$.}
+    \KwOut{Set of matching queries $Q_1$, parent
+    dictionary $P$.}
+    \BlankLine
+    $\mathit{Q_1 \leftarrow \emptyset}$\;
+    \lIf{$\theta_1 > \theta_0$}
+    {
+        $D \leftarrow D_1$}
+    \lElse{$D \leftarrow D_1\backslash D_0$}
+
+%    $\mathit{R \leftarrow \emptyset}$\;
+    ${O \leftarrow}$ empty stack\;
+    % \lForEach{$q\in Q$}
+    %     {$R \leftarrow R \cup \left\{P(q)\right\} $}
+    % \lForEach{$q\in Q\backslash R$}{
+    % $O.\textsc{push}(q)$}
+    $O.\textsc{push}(\langle\varepsilon\rangle)$\;
+    \tcc{\scriptsize Explore queries that are pushed to the stack}
+    \While{${O}$ not empty}
+    {
+            ${q \leftarrow O}.\textsc{pop}()$\;
+            % \If{$q \not\in Q_1$}{
+
+%            $\mathit{M \leftarrow}$
+%\textsc{Match}(${q,D,\theta}$)
+%            \;
+            % \If{$ M = \False$} {
+            \If{\normalfont{\textsc{Match}}(${q,D,\theta}$)}
+             {
+            \tcc{\scriptsize For frequent queries, add
+            the query
+            to the result set and
+            push their child queries onto the stack}
+
+            ${Q_1 \leftarrow Q_1 \cup \left\{q\right\}
+            }$\;
+            % $O.\textsc{push}(P(q))$\;
+            % $P.\textsc{pop}(q)$ \;
+            ${C} \leftarrow  \{q'\in \dom(P) \mid P(q')=q\}$\;
+            \lForEach{$q'\in C$}{
+            $O.\textsc{push}(q')$}
+            }
+            % \lElse{
+            %     ${Q_1 \leftarrow Q_1 \cup \left\{q\right\} }$}
+
+        % }
+    }
+    {\Return{$\mathit{Q_1,P}$}}
+    \end{algorithm}
+
+\subsection{Stream Deletion and/or Decreased Support Threshold}
+\label{sec:delete_decrease}
+
+Next, we turn to incremental event query discovery once
+streams are deleted from the database and/or the support
+threshold is decreased. Again, our approach relies on
+\autoref{lemma:update}, and exploits that all queries in
+the existing set of matching queries will
+also match the updated stream database.
+
+In general, the idea of handling stream deletion and/or a decreased support
+threshold in an incremental manner can be summarized as follows.
+We consider the queries, for which the child queries are not frequent.
+Intuitively, these queries denote the frontier of frequent queries in the
+space of all query candidates. For these queries, we derive the child
+queries and add them to the stack of queries to be explored further using
+the basic discovery procedure. However, this exploration first considers
+solely the attribute values that have been frequent in the original
+database. In order to ensure completeness of the set of matching queries, in
+a second step, we therefore also check whether the frequent alphabet in the
+updated stream database contains new attribute values. If so, we generate
+the child queries of all frequent queries found so far, but only incorporate
+the new frequent attribute values (and no insertion of variables) in the
+respective generation. All queries generated in this way, had not
+been considered previously. If one of these queries is frequent, we
+iteratively continue the exploration with their child queries, this 
+time inserting all frequent attribute values as well as variables.
+As such, the algorithm is similar to the basic discovery procedure
+introduced in \autoref{sec:discovery}, but shows an important difference: It
+only assesses queries that have been not been checked as part of the
+previous discovery run over the database before the change.
+
+
+
+%For these queries, we construct the child
+%calculating their children and adding them to the stack of queries to be
+%matched.
+%Then the algorithm checks whether the supported alphabet of the new stream
+%database is the same
+%as the supported alphabet of the old stream database.
+%In case, the supported alphabet includes new types, we consider all
+%matching queries calculated so far
+%and generate new candidate queries by adding the new types to the supported
+%alphabet.
+%We prevent queries from being generated more than once by first adding to
+%the existing queries
+%only the newly supported types. All queries generated in this way, had not
+%been considered
+%previously.
+%If a query matches, we keep generating
+%(then considering the entire supported alphabet) new candidate queries
+%until we reach a non-match.
+%% Finally, we disgard all matching queries which are not descriptive to
+%%obtain the updated set of descriptive queries.
+%The algorithm is similar to the baseline algorithm with the main difference
+%that it only checks queries that were not part of the previous event query
+%discovery.
+
+
+We formalize the respective algorithm in \autoref{alg_spec}. The input is
+the same as discussed for \autoref{alg_gen}, in terms of the stream
+databases, support thresholds, parent dictionary and the set of matching
+queries. The algorithm then initializes the frequent alphabets for the
+stream databases before and after the change, i.e., $\Gamma(D_0,\theta_0)$
+and $\Gamma(D_1,\theta_1)$. Then, we collect all parents of frequent
+queries, as a set $R$, to be able to iterate over all queries, for which the
+child queries are not frequent, given by $Q_1 \setminus R$. For these
+queries, the child queries are generated using function
+\textsc{ChildQueries}, considering the frequent alphabet
+$\Gamma(D_0,\theta_0)$, and pushed to a query stack. The latter is used in
+function \textsc{Discovery}, from \autoref{alg-discovery}, to explore the
+space of candidate queries, starting from the queries on the stack.
+
+\begin{algorithm}[t]
+    \small
+    \caption{\textsc{UpdateMinus}}
+    \label{alg_spec}
+    \KwIn{\, \ Stream database $D_0$, support threshold $\theta_0$,
+    set of matching queries $Q_0$,
+    \\ \hspace{3em} \,
+    parent dictionary $P$,
+    updated stream database $D_1$, updated support
+    threshold $\theta_1$.}
+    \KwOut{Set of matching queries $Q_1$, updated parent
+    dictionary $P$.}
+    \BlankLine
+    $\mathit{Q_1 \leftarrow Q_0}$\;
+    $s_0 \gets s(|D_0|,\theta_0)$\;
+    $\Gamma(D_0,\theta_0) \gets \{a \in
+    \Gamma \mid |\{S \in D_0 \mid \exists \
+    j\in\{1,...,|S|\},
+    i\in\{1,...,n\}: S[j].A_i = a\}|\geq s_0\}$\;
+    $s_1 \gets s(|D_1|,\theta_1)$\;
+    $\Gamma(D_1,\theta_1) \gets \{a \in
+    \Gamma \mid |\{S \in D_1 \mid \exists \
+    j\in\{1,...,|S|\},
+    i\in\{1,...,n\}: S[j].A_i = a\}| \geq s_1\}$\;
+%    \Gamma_{D_0} \gets \{a \in \Gamma_0 \mid |M_+(a,D_0)|
+%\geq \lceil |D_0| \cdot \theta_0 \rceil\}$\;
+%    $\Gamma_{D_1} \gets \{a \in \Gamma_1 \mid
+%|M_+(a,D_1)| \geq \lceil |D_1| \cdot \theta_1 \rceil\}$\;
+    $\mathit{R \leftarrow \emptyset}$\;
+    ${O \leftarrow}$ empty stack\;
+    \lForEach{$q\in Q_1$}
+        {$R \leftarrow R \cup \left\{P(q)\right\} $}
+    \ForEach{$q\in Q_1\backslash R$}{
+        ${P \leftarrow}$
+        \textsc{ChildQueries}($\mathit{q,\Gamma({D_0},\theta_0),P}$)\;
+        ${C} \leftarrow  \{q'\in \dom(P) \mid P(q')=q\}$\;
+        \If{$ C \neq \emptyset$}{
+        \lForEach{$q'\in C$}{
+            $O.\textsc{push}(q')$}
+        }
+    }
+    $ Q_1,P \leftarrow \textsc{Discovery}(D_1,\theta_1,
+    \Gamma({D_0},\theta_0), Q_1, P, O)$\;
+
+    \If{$\Gamma({D_1},\theta_1)\backslash
+    \Gamma({D_0},\theta_0) \neq \emptyset$}{
+        \ForEach{$q\in Q_1$}{
+        ${P \leftarrow}$
+        \textsc{ChildQueriesNoVars}($\mathit{q,\Gamma({D_1},\theta_1)\backslash
+         \Gamma({D_0},\theta_0),P}$)\;
+        ${C} \leftarrow  \{q'\in \dom(P) \mid P(q')=q\}$\;
+        \If{$ C \neq \emptyset$}{
+        \lForEach{$q'\in C$}{
+            $O.\textsc{push}(q')$}
+        }
+    }
+    $Q_1,P \leftarrow \textsc{Discovery}(D_1,
+    \theta_1, \Gamma({D_1},\theta_1), Q_1, P, O)$\;
+
+    }
+    {\Return{$\mathit{Q_1,P}$}}
+    \end{algorithm}
+
+As mentioned, we need to consider that an update to the stream
+database changed the frequent alphabet, i.e., attribute values became
+frequent due to the removal of streams. If so, i.e., if
+$\Gamma({D_1},\theta_1)\backslash
+\Gamma({D_0},\theta_0)$ is not empty, for each query obtained so far, we
+need to consider the child queries constructed
+only through the insertion of these new frequent attribute values
+(neglecting the insertion of additional variables), which is captured by
+function \textsc{ChildQueriesNoVars}. For these queries, further exploration
+may be needed, so that they are pushed onto the query stack, which is then
+used in function \textsc{Discovery}.

@@ -1,0 +1,74 @@
+\section{Related Work}
+\label{sec:related-work}
+%\todo[inline]{We acknowledge that techniques for
+%sequential rule mining are related.
+%Yet, there is a fundamental difference in the adopted
+%query model.
+%In the revised version, we will add a more
+%comprehensive discussion of these techniques,
+%clarifying their differences and the unique
+%challenges in the context of CEP.}
+Our work relates to existing approaches for automated query discovery, as
+well as incremental algorithms for sequential pattern mining and frequent
+itemset mining.
+
+\textbf{Automated Query Discovery}
+So far research in the area of automated query discovery did not take into account
+updates in the database or the support threshold.
+We adopted the query model used in ~\cite{DBLP:conf/btw/Kleest-Meissner23}. But
+the proposed algorithm does not find all matching queries but only discovers
+one matching query for each run.
+The other approaches \cite{ilminer,icep} further lack in the query
+expressiveness. While \cite{icep} cannot discover queries with
+multiple occurrences of an attribute value, \cite{ilminer} lacks
+the ability to find query terms which only contain variables.
+
+\textbf{Incremental Sequential Pattern Mining}
+A related field in which incremental algorithms have been proposed
+is sequential pattern mining. Here, the input is a database of strings
+rather than a stream of events which can contain multiple attributes.
+Furthermore, the discovery is limited to type level without the
+ability to discover variables or patterns.
+In \cite{zheng2002,zheng2003}, the authors propose two algorithms, one for
+adding
+and one for deleting data to the original database. The algorithms make use of
+negative border sequences which are those sequences whose sub-sequences
+are frequent to recalculate the results.
+\cite{mallick2013} presents a survey that summarizes the incremental
+approaches in this
+area. There the highlighted algorithms are based on common frequent
+sequence mining algorithms.
+
+
+
+
+
+\textbf{Incremental Frequent Itemset Mining}
+In frequent itemset mining sets of items are discovered that occur frequently
+together in a database. This setting differs from our query discovery since
+the events in a discovered query are order sensitive whereas item sets can occur
+in arbitrary order.
+High-utility pattern mining, a sub-field of frequent itemset mining,
+discovers itemsets based on a user-defined utility threshold.
+The incremental algorithm introduced in \cite{yun2015} proposes a tree
+structure to update the item sets.
+
+\textbf{Sequential Rule Mining}
+Sequential rule mining \cite{fournier2011rulegrowth,erminer} is a combination of sequential pattern mining and
+frequent itemset mining. The goal is to find rules that describe a
+relationship between itemsets in a sequence. The rules are of the form
+$X \rightarrow Y$ where $X$ and $Y$ are itemsets. The rules are
+evaluated based on metrics like support and
+confidence, and my also be found
+incrementally~\cite{ierminer}.
+However, one limitation of such rules is that they are
+bounded to
+one implication whereas our queries can contain multiple events.
+Also, the rules are limited in their expressiveness as
+the itemset captures only type-level information, not
+allowing for variables.
+
+
+
+% Theory paper recommended by Sarah
+% \cite{idris2020}

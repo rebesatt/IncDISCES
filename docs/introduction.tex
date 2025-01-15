@@ -1,0 +1,112 @@
+\section{Introduction}
+\label{sec:introduction}
+
+%\todo[inline]{R2 on queries for outliers: The stream
+%database is assumed to represent
+%deviating/abnormal/outlier behavior,
+%so that the discovered queries capture the common
+%patterns that are inherent to the respective
+%situations.
+%We intend to clarify this in the paper.}
+Complex event processing (CEP) is a computational paradigm
+to facilitate reactive and proactive
+applications~\cite{DBLP:journals/csur/CugolaM12,DBLP:journals/vldb/GiatrakosAADG20}.
+ In CEP, a set of queries are evaluated continuously over
+a stream of events in order to detect situations of
+interest in domains, such as urban
+transportation~\cite{DBLP:conf/edbt/ArtikisWSBLPBMKMGMGK14},
+computational
+finance~\cite{DBLP:journals/computer/ChandramouliAGSR10},
+and supply chain
+management~\cite{DBLP:journals/cii/KonovalenkoL19}.
+Often, these situations of interest are deviating or
+abnormal behaviour, so that their timely detection
+facilitates the implementation of counter-measures.
+
+In essence, CEP queries capture sequential patterns of
+events, i.e., they describe a sequence of events of
+specific types, additional conditions on the attribute
+values of the respective events, and a time window for
+their occurrence. As the exact characterization of the
+event patterns is challenging in practice, one may support
+users in the specification of queries
+with techniques for automated query
+discovery~\cite{icep,ilminer,DBLP:conf/btw/Kleest-Meissner23}.
+ Here, the assumption is
+that a database of finite, historic (sub-)streams that
+cover the situation of interest is available. That is,
+if the situation of interest is some deviating or
+abnormal behaviour, the assumption is that the
+database contains only the respective streams, not the
+common behaviour. Then,
+queries that match a certain share of these streams, as
+determined by a support threshold, can be extracted and
+subsequently be assessed and validated by a user.
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=0.8\columnwidth]{img/overview.drawio.pdf}
+	%\vspace{-1.0em}
+	\caption{The general setting of incremental event
+	query discovery: An update of the stream
+	database or support threshold shall be incorporated in
+	an updated set of queries.}
+	\label{fig:overview}
+	\vspace{-1em}
+\end{figure}
+
+However, over time, the database of streams used as a
+basis for query discovery may be subject to change.
+Additional streams that capture a situation of interest
+may become available, or streams that are already in the
+database may be considered outdated. As part of that, the
+requirements for query discovery in terms of the adopted
+support threshold may also change, i.e., it may be relaxed
+to increase the number of discovered queries, or
+strengthened to avoid false positives in the result.
+
+Yet, upon changes in the database or in the support
+threshold, existing discovery algorithms need to construct
+the resulting queries from scratch. This is problematic
+since solving the problem of event query discovery is
+computationally hard, as an exponentially growing space of
+candidate queries (in the query length and attribute
+domains) needs to be explored and the evaluation of a
+single query also shows an exponential runtime complexity
+(in the number of variables, i.e., conditions over
+multiple events)~\cite{icdt2022}.
+
+In this paper, we set out to avoid
+inefficient recomputation with strategies for incremental
+event query discovery. Our idea is that the discovery
+result shall be reused and adapted once the databases or
+the support threshold change, as illustrated in
+\autoref{fig:overview}. To this end, after giving
+formal preliminaries (\autoref{sec:problem-setting}), we
+make the following contributions:
+\begin{enumerate}[left=.2em,nosep,label=(\roman*)]
+\item We present a theoretical analysis of
+the problem context (\autoref{sec:updates}).
+Specifically, we show that under certain conditions, the
+result set of queries for an updated stream database or an
+updated support threshold denotes a subset of the existing
+result.
+\item We present algorithmic
+solutions for incremental query discovery
+(\autoref{sec:algos}). They adapt a given set of queries,
+thereby aiming to avoid inefficient recomputation.
+\end{enumerate}
+We assess the feasibility of our
+solution in several experiments
+(\autoref{sec:evaluation}), showing that incremental
+discovery reduces the runtimes by up to 10x.
+Finally, we review related work
+(\autoref{sec:related-work}) and conclude the paper
+(\autoref{sec:conclusions}).
+
+
+
+
+
+
+

@@ -1,0 +1,411 @@
+\section{Background on Query Discovery}
+\label{sec:problem-setting}
+%\todo[inline]{R2: The explanation of the query model is good. However, it
+%could be supplemented by different pattern-matching semantics
+%(contiguous, skip-till-next, skip-till-any) and an explanation of how the
+%window parameter can be learned.
+%
+%A: We will add a statement on how to incorporate further query semantics and
+%how to determine the window size.}
+Below, we introduce preliminary notions to study
+the problem of event query discovery.
+
+%\subsection{Event Streams and Queries}
+%\label{sec:streams}
+
+%We adopt some standard notation for sequences, as follows. For a set
+%${Y}$, the set of all sequences over ${Y}$ is ${Y}^*$.
+%For a finite sequence $z=\langle y_1,\ldots, y_n \rangle \in {Y}^*$, we
+%write $z[i] = y_i$ for the $i$-th element.
+
+\sstitle{Event streams}
+We based our work on the notion of a multivariate event
+stream. Such a stream has an \emph{event schema}, captured
+by a tuple of attributes $\mathcal{A}= (A_1, \ldots,
+A_n)$, where $\dom(A_i)$ is the finite domain of attribute
+$A_i$, $1\leq i\leq n$. All events have the same schema
+and we assume that attribute domains are disjoint,
+$\cap_{i=1}^n \dom(A_i) =
+\emptyset$. As a short-hand, we write $\Gamma =
+\bigcup_{i=1}^n{\dom(A_i)}$ for the alphabet defined by
+all possible values of attributes. Moreover, an
+\emph{event} is an instantiation of the event schema,
+captured as a tuple $e=(a_1, \ldots, a_n)$ with $a_i\in
+\dom(A_i)$ for $1\leq
+i\leq n$. By $e.A_i$, we denote the value of attribute
+$A_i$ of event $e$.
+
+An \emph{event stream} is a finite
+sequence of events $S=\langle e_1, \ldots, e_l
+\rangle$, i.e., a finite subsequence of a
+potentially unbounded sequence of events. We write $|S|$
+for the length of the stream, and $S[i]$ for its $i$-th
+event. A \emph{stream database} is a finite set of
+streams $D=\{S_1,\ldots, S_d\}$.
+
+\sstitle{Event queries}
+We adopt a query model that captures sequences of events,
+which are correlated by predicates over their attribute
+values~\cite{DBLP:conf/sigmod/ZhangDI14}. We neglect the
+definition of an explicit time window, as it may be
+derived from the maximal time difference between events in
+one of the streams. That is, taking the time between the start and end of
+each stream, the maximal time span over all streams is an upper bound for the
+time interval, in which a situation of interest is expected to occur.
+Moreover, we
+follow~\cite{DBLP:conf/btw/Kleest-Meissner23} and use a
+linearized representation of event queries.
+Let $\mathcal{A}= (A_1, \ldots,
+A_n)$ be an event schema, $\mathcal{X}$ be a finite set of
+variables
+such that $\mathcal{X}\cap
+\Gamma=\emptyset$, and $\_ \notin \mathcal{X}\cup
+\Gamma$ be a placeholder symbol. Then, we define a
+\emph{query
+term} $t=(u_{1},\ldots,u_{n})$ as an $n$-tuple comprising
+attribute
+values, variables, and placeholders:
+$u_{j}\in \dom(A_j) \cup \mathcal{X} \cup \{ \_ \}$,
+$1\leq j\leq n$, while we prohibit terms containing only
+placeholders, i.e., $u_{j}\in
+\dom(A_j) \cup \mathcal{X}$ for at least one $1\leq j\leq n$.
+By $\varepsilon$, we denote the empty query term that
+contains only
+placeholders, i.e., %$\varepsilon=(\underbrace{\_,\dots,\_}_{n})$
+$\varepsilon=(\_,\dots,\_)$.
+Based thereon, an \emph{event
+query} is a finite sequence of query terms, $q=\langle
+t_1,\ldots,t_k \rangle$,
+with $q[i]$ denoting the $i$-th term. In a query, variables need to occur in at
+least two query terms for the same attribute, i.e., for any term
+$q[i]=(u_{1},\ldots,u_{n})$ with $u_j\in \mathcal{X}$,
+$1\leq i\leq k$ and $1\leq j\leq n$, there exists another query term
+$q[p]=(u'_{1},\ldots,u'_{n})$ with $u_j = u'_j$,
+$1\leq p\leq k$ and $p\neq i$. The empty query is
+$\langle\varepsilon\rangle$, i.e., the query containing
+the empty query term. By $\mathcal{Q}$, we denote the
+universe of all queries.
+
+From an intuitive point of view, a query term describes a
+single event that shall be matched by defining a specific
+value, variable, or placeholder per attribute. While a
+placeholder denotes the absence of any constraint, the use
+of variables captures the correlation of events as
+matching events need to have equivalent values for the
+respective attributes.
+
+
+%\item $\tau\in \mathbb{N}$ is a window with $\tau \leq k$.
+%\end{itemize}
+%Given an event
+%schema $\mathcal{A} =
+%(A_1, \ldots, A_n)$ and a finite set of variables $\mathcal{X}$,
+%an event query
+%%is a tuple $q=(T,\tau)$, where
+%%\begin{itemize}[nosep]
+%%\item
+%is a finite sequence of query terms $q=\langle t_1,\ldots,t_k \rangle$,
+%with $q[i]$ denoting the $i$-th term. Each term
+%$t_i=(u_{1},\ldots,u_{n})$, $1\leq i\leq k$, is an $n$-tuple built of
+%attribute
+%values, variables, and the dedicated
+%symbol $\varepsilon \notin \Gamma \cup \mathcal{X}$ to capture the absence of
+%a
+%constraint,
+%i.e.,
+%$u_{j}\in \dom(A_j) \cup
+%\mathcal{X} \cup \{\varepsilon\}$, $1\leq j\leq n$.
+%%\item $\tau\in \mathbb{N}$ is a window with $\tau \leq k$.
+%%\end{itemize}
+
+%Note that variables that occur only once in a query are
+%semantically
+%equivalent
+%to placeholders and, as such, will be largely neglected in the remainder.
+%Also,
+%only the elements of $\mathcal{X}$ that occur at least twice in a query are
+%referred to as variables.
+%Adopting this terminology,
+
+Moreover, we distinguish three classes of queries: A
+\emph{type query} contains only query terms defining
+attribute values (and
+placeholders). A \emph{pattern query} contains only query
+terms defining variables (and
+placeholders). All other queries are referred to as
+\emph{mixed queries}.
+
+% only
+%variables, or a combination of both.
+%These are denoted as type queries, pattern queries, and mixed queries,
+%respectively.
+% To improve readability, the non specified attributes are left empty in the query
+%terms.
+
+\begin{table}[t]
+	\caption{Overview of notations.}
+	\label{tab:notations}
+	\vspace{-.5em}
+	\footnotesize
+	\begin{tabularx} {\textwidth}{l
+	 @{\hspace{.5em}} p{10cm}}
+	\toprule
+	Notation & Explanation \\
+	\midrule
+	$\mathcal{A}=(A_1, \ldots, A_n )$ & An event
+	schema, a
+	tuple of attributes\\
+	$\Gamma  = \bigcup_{i=1}^n{\dom(A_i)}$ & The stream alphabet\\
+	$e= (a_1, \ldots, a_n)$ & An event, a tuple
+	of attribute values\\
+	$e.A_i$ & The value $a_i$ of attribute $A_i$ of
+	event $e$\\
+	%$e.t$ & The occurrence time of event $E$\\
+	$S=\langle e_1, \ldots, e_l \rangle$ & An event
+	stream, a finite sequence of events\\
+	$S[i]$ & The $i$-th event of the event stream $S$\\
+	$D=\{S_1,\ldots, S_d \}$ & A stream database, a
+	set of event streams\\
+%	$\Gamma_D$ & The supported stream alphabet of stream database $D$\\
+	\midrule
+	$\mathcal{X}$ & A finite set of query variables, $\mathcal{X} \cap
+	\Gamma=\emptyset$\\
+	$\_$ & A placeholder symbol, $\_ \notin \mathcal{X}\cup
+	\Gamma$\\
+	$t=(u_{1},\ldots,u_{n})$& A query term, an
+	$n$-tuple of attribute values, variables, and placeholders\\
+%	with $u_{j}\in
+%	\dom(A_j) \cup \mathcal{X} \cup \{\_ \}$, $1\leq j\leq n$, such that not
+%	all its components are placeholders\\
+	$\varepsilon=(\_,\ldots,\_)$& The empty query term, an
+$n$-tuple of placeholders\\
+	$q=\langle
+	t_1, \ldots, t_k \rangle$ & An event query, a finite sequence of
+	query terms \\
+	$q[i]$ & The $i$-th term of the query $q$\\
+	$\langle \varepsilon\rangle$ & The empty query containing only the empty
+	query term \\
+	\midrule
+	$S \models q$ & The stream $S$ supports the
+	query $q$, i.e., there exists a match\\
+	$M_+(q,D)$ & The set of streams in $D$ that match the query $q$\\
+%	$M_-(q,D)$ & The set of streams in $D$ that do not match the query $q$\\
+	supp$(q,D)$ & The support of query $q$ in stream database $D$\\
+	$\theta$ & The support threshold, a real number in the interval $(0,1]$\\
+	$s(|D|,\theta)$ & The stream threshold, the min number of streams
+	to match to fulfill the support threshold\\
+	$\Gamma(D,\theta)$ & The frequent stream alphabet\\
+	$Q_{D}^{\theta}$ & The set of all matching queries\\
+	%$q$ in stream $S$\\
+	\bottomrule
+	\end{tabularx}
+	\vspace{-1em}
+\end{table}
+
+We define the semantics of a query $q=\langle
+t_1,\ldots,t_k \rangle$ over a stream $S=\langle e_1,
+\ldots , e_l\rangle$ as follows: A \emph{match} of $q$ in
+$S$ is an injective mapping
+$m: \{1,\ldots,k\}\rightarrow \{1, \ldots, l\}$,
+such that:
+\begin{itemize}[nosep,left=.2em .. 1.5em]
+	\item for each query term $q[i]=(u_{1},\ldots,u_{n})$, $1\leq i\leq k$, the
+	mapped event $S[m(i)]=(a_1,\ldots, a_n)$ has the
+	required attribute
+	values, $u_j = a_j$ or $u_j\in \mathcal{X}\cup \{\_ \}$
+	for $1\leq 	j\leq n$;
+	\item variables are bound to the same attribute values, i.e., for query
+	terms $q[i]=(u_1,\ldots, u_n)$ and $q[p]=(u'_1,\ldots, u'_n)$, $1\leq
+	i,p\leq k$, it holds that $u_j\in \mathcal{X}$, $1\leq j\leq n$, with
+	$u_j=u'_j$ implies that $S[m(i)].A_j = S[m(p)].A_j$; and
+ 	\item the order of events in the stream is preserved,
+ 	i.e., $m(i)<m(p)$ for $1\leq
+	i<p\leq k$.
+\end{itemize}
+Note that the set of matches as induced by the above definition corresponds
+to a greedy event selection
+policy (also known as unconstrained or skip-till-any-match). It does not
+limit how often an event can participate in matches. However, in the
+remainder, we do not explicitly refer to the set of matches, but consider
+only the existence of a match per stream. Specifically, we say that
+$q$ matches $S$ and write $S \models q$, if there exists a
+match for query $q$ in stream $S$. \autoref{tab:notations}
+provides an overview of the introduced notations.
+
+\sstitle{Support} To reason about the relation of a query
+$q$ and a stream database $D$, we
+define $M_+(q,D)$ as the
+set of matching streams, i.e., $M_+(q,D) = \{S \in D \mid
+S \models q\}$.
+The \emph{support} supp$(q,D)$ of a query is then given as
+the fraction of streams in $D$ that match the query,
+supp$(q,D)= \frac{|M_+(q,D)|}{|D|}$.
+A \emph{support threshold} $\theta$ is a real number in
+the interval $(0,1]$.
+A query $q$ is \emph{frequent} in $D$, if supp$(q,D) \geq
+\theta$.
+From the aforementioned notions, we derive the
+\emph{stream threshold} $s(|D|,\theta)$ as the minimum
+number of streams
+that must match to a query in order for the query to be
+considered frequent, i.e., $s(|D|,\theta) = \lceil |D| \cdot
+\theta \rceil$.
+Based thereon, we also derive the frequent stream alphabet, defined by all
+attribute values that appear in at least the number of streams as
+determined by the stream threshold, i.e., $\Gamma(D,\theta) = \{a \in
+\Gamma \mid |\{S \in D \mid \exists \ j\in\{1,\dots,|S|\},
+i\in\{1,\dots,n\}: S[j].A_i = a\}| \geq s(|D|,\theta)\}$.
+Furthermore, as a short-hand,
+we define the set of all matching queries as $Q_D^{\theta}
+= \{q \mid \text{supp}(q,D) \geq \theta\}$.
+
+For a given stream database, it is clear that support
+thresholds induce a containment relation for the sets of
+matching queries. As we later rely on this property, we
+state it as follows:
+
+\begin{property}
+\label{prop:subset}
+Let $D$ be a stream database and $\theta_1$, $\theta_2$ be support thresholds. %with $\theta_1 \leq \theta_2$.
+Let $Q_D^{\theta_1}$ and $Q_D^{\theta_2}$ be the sets of all matching queries. %, where $Q_i = \{q \mid \text{supp}(q,D) \geq \theta_i\}$ for $i \in \{1,2\}$.
+If $\theta_2 \geq \theta_1$, then $Q_D^{\theta_2} \subseteq Q_D^{\theta_1}$.
+\end{property}
+% \textbf{Proposition:} Let $D$ be a stream database and $\theta_1$, $\theta_2$ be support thresholds. %with $\theta_1 \leq \theta_2$.
+% Let $P_D^{\theta_1}$ and $P_D^{\theta_2}$ be the sets of all matching queries. %, where $Q_i = \{q \mid \text{supp}(q,D) \geq \theta_i\}$ for $i \in \{1,2\}$.
+% If $\theta_2 \geq \theta_1$, then $P_D^{\theta_2} \subseteq P_D^{\theta_1}$. \\
+\textit{Proof.}
+    Let $q \in Q_D^{\theta_2}$. Then, supp$(q,D) \geq
+    \theta_2 \geq \theta_1$, and thus, $q \in
+    Q_D^{\theta_1}$
+    and $Q_D^{\theta_2} \subseteq
+    Q_D^{\theta_1}. $ \hfill \qed
+
+
+\autoref{tab:example_stream_database} shows a database
+of three streams from a cluster monitoring
+application~\cite{reiss2012towards}. Each event has three
+attributes, denoting the ID, status, and priority of a job
+that is executed on a compute cluster. Now, consider the
+query $q = \langle
+ (x_0,\text{schedule},\text{low}),$
+ $(\_,\text{schedule},\_),$ $(x_0,\text{evict},\text{low})
+\rangle$. It matches streams $S_2$ and $S_3$, as, e.g.,
+the three query terms of $q$ can be mapped to
+events $e_{32}$, $e_{34}$, and $e_{35}$ of
+$S_3$ (the mapped events are highlighted in blue). Note that
+these are the only possible mappings for this scenario, since
+the order of the query needs to be preserved.
+Yet, the query does not match $S_1$, as the third query term
+cannot be mapped to any event ($e_{14}$, highlighted
+in red, does not qualify to be mapped).
+With a support threshold of
+0.6, query $q$ would be in the set of matching queries for
+the stream database.
+
+%\begin{wraptable}{r}{6cm}
+\begin{table}
+\centering
+\small
+\vspace{-.0em}
+\caption{Example stream database.}
+\label{tab:example_stream_database}
+	\begin{tabular}{l lrrr}
+		\toprule
+		Stream & Event &  Job Id  &  Status  &  Priority\\
+		\midrule
+		$S_1$ & $e_{11}$   & \textbf{\color{cyan}\underline{1}} &
+		\textbf{\color{cyan}\underline{schedule}} &
+		\textbf{\color{cyan}\underline{low}}  \\
+	 & $e_{12}$   & 1 & kill & low  \\
+	 & $e_{13}$   & 1 & \textbf{\color{cyan}\underline{schedule}} &
+	 high  \\
+	 & $e_{14}$   & \textbf{\color{cyan}\underline{1}} &
+	 \textbf{\color{red}\dotuline{finish}} &
+	 \textbf{\color{red}\dotuline{high}}  \\
+		\midrule
+		$S_2$ & $e_{21}$   & \textbf{\color{cyan}\underline{2}} &
+		\textbf{\color{cyan}\underline{schedule}} &
+		\textbf{\color{cyan}\underline{low}}  \\
+	 & $e_{22}$   & 3 & \textbf{\color{cyan}\underline{schedule}} &
+	 high  \\
+	 & $e_{23}$   & \textbf{\color{cyan}\underline{2}} &
+	 \textbf{\color{cyan}\underline{evict}} & \textbf{\color{cyan}\underline{low}}
+	 \\
+		\midrule
+		$S_3$ & $e_{31}$   & 4 & schedule & high  \\
+	 & $e_{32}$   & \textbf{\color{cyan}\underline{5}} &
+	 \textbf{\color{cyan}\underline{schedule}} &
+	 \textbf{\color{cyan}\underline{low}}  \\
+	 & $e_{33}$   & 4 & finish & high  \\
+	 & $e_{34}$   & 6 & \textbf{\color{cyan}\underline{schedule}} &
+	 low  \\
+	 & $e_{35}$   & \textbf{\color{cyan}\underline{5}} &
+	 \textbf{\color{cyan}\underline{evict}} &
+	 \textbf{\color{cyan}\underline{low}}\\
+		\bottomrule
+\end{tabular}
+%\vspace{-1em}
+\end{table}
+
+
+
+
+% \subsection{Query Discovery}
+% \label{sec:discovery}
+
+% Given a stream database, the problem of event query discovery relates to
+% the identification of event queries that match to a sufficient number of streams to
+% fulfill the support threshold.
+% % , i.e., for
+% % which there exists at least a single match for each stream.
+% %are interested in queries for which there exists at least a single match of
+% %the query for each stream.
+% However, there may exist queries that fulfill the support threshold,
+% but which are comparable in the sense that one of them
+% is stricter than another one. Formally, a query $q$ is defined as stricter
+% than a query $q'$, denoted by $q\prec q'$, if
+% % $M(S,q)\subset M(S,q')$ for \emph{any} event stream $S$.
+% %$\forall$ Stream $S:$ if $S \models q \Rightarrow S \models q', \exists \
+% %S$ s.t. $S \models q$, but $S \not\models q$.
+% (i) for any possible stream $S$ (not necessarily contained in a given stream
+% database), $S \models q$ implies $S
+% \models q'$, and (ii) there exists a stream $S$, such that $S \models q'$,
+% but $S \not\models q$.
+
+% In event query discovery, we are only interested in the strictest queries
+% that fulfill the support threshold. The reasoning being that these queries
+% denote the most concise characterization of the patterns of events
+% that
+% indicate a situation of interest. For a stream database $D$, we therefore
+% consider a notion of descriptiveness~\cite{icdt2022}: A query $q$ is descriptive for $D$,
+% if it is supported by $D$ and
+% there does not exist a query $q'$ that is stricter, $q'\prec q$, and that is
+% also supported by the stream database $D$.
+% Based thereon, we formulate the problem of event query discovery:
+
+
+
+% \begin{problem}[Event Query Discovery]
+% \label{problem}
+% Given a stream database $D=\{S_1,\ldots, S_d\}$ and a support threshold $\theta$,
+% the problem of event query discovery is to construct the set of queries $Q_D^{\theta}$,
+% such that:
+% \begin{itemize}[nosep,left=1em]
+%   \item $Q_D^{\theta}$ is correct: each $q\in Q_D^{\theta}$ creates at least a single match for
+%   a sufficient number streams thus fulfilling the support threshold $\theta$;
+%   , i.e., for all $q\in Q_D^{\theta}$ and $S\in M_+(q,D)$ it holds that $S \models
+%   q$ and supp$(q,D) = \frac{|M_+(q,D)|}{|D|} \geq \theta$;
+%   \item ${Q_D^{\theta}}$ is descriptive: only the strictest queries are considered,
+%   i.e., for all $q,q'\in Q_D^{\theta}$ it holds that neither $q\prec q'$ nor $q'\prec q$;
+%   \item ${Q_D^{\theta}}$ is complete: if a query $q$ is both correct and descriptive,
+%   then it holds that $q\in Q_D^{\theta}$, i.e., ${Q_D^{\theta}Q}$ contains all queries
+%   that are both correct and descriptive.
+%   \end{itemize}
+% \end{problem}
+
+
+
+
+
+
+
